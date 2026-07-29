@@ -7,7 +7,9 @@ authors = [
     { email = "christoph.werner.stein@gmail.com" }
 ]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "numpy>=2.0.2",
+]
 
 [project.scripts]
 sas = "sas:main"
