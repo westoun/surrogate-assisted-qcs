@@ -4,6 +4,7 @@ import numpy as np
 from typing import Any, List
 
 from .evaluator import IEvaluator
+from src.sas.utils.random_ import random_circuit
 
 
 @dataclass
@@ -13,6 +14,8 @@ class EAParams:
     parent_count: int
     offspring_count: int
     max_generations: int
+    qubit_num: int
+    gate_count: int
 
 
 class EvolutionaryAlgorithm():
@@ -42,8 +45,11 @@ class EvolutionaryAlgorithm():
             population = parents + offspring
 
     def init_population(self, count: int) -> List[Any]:
-        # TODO: Adjust circuit typing once decided.
-        raise NotImplementedError()
+        population = [
+            random_circuit(self.params.qubit_num, self.params.gate_count)
+            for _ in range(count)
+        ]
+        return population
 
     def evaluate(self, circuits: List[Any]) -> List[float]:
         # TODO: Adjust circuit typing once decided.
