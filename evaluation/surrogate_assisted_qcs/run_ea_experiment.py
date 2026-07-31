@@ -5,7 +5,6 @@ import random
 from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
-from src.sas.evaluator import IEvaluator
 from src.sas.utils.random_ import random_circuit
 
 
