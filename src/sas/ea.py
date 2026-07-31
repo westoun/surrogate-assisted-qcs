@@ -1,10 +1,12 @@
 
 from dataclasses import dataclass
 import numpy as np
+from random import sample, randint
 from typing import Any, List
 
 from .evaluator import IEvaluator
-from src.sas.utils.random_ import random_circuit
+from src.sas.utils.random_ import random_circuit, random_gate
+from src.sas.circuit import Circuit
 
 
 @dataclass
@@ -31,47 +33,43 @@ class EvolutionaryAlgorithm():
 
         for generation in range(self.params.max_generations):
 
-            fitness_scores = self.evaluate(population)
+            self.evaluate(population)
 
             # TODO: Add logging.
 
             # check stopping criterion
 
-            parents = self.select(population, fitness_scores,
-                                  count=self.params.parent_count)
+            parents = self.select(population, count=self.params.parent_count)
 
             offspring = self.mutate(parents, count=self.params.offspring_count)
 
             population = parents + offspring
 
-    def init_population(self, count: int) -> List[Any]:
+    def init_population(self, count: int) -> List[Circuit]:
         population = [
             random_circuit(self.params.qubit_num, self.params.gate_count)
             for _ in range(count)
         ]
         return population
 
-    def evaluate(self, circuits: List[Any]) -> List[float]:
-        # TODO: Adjust circuit typing once decided.
-        fitness_scores = [
-            self.params.evaluator.evaluate(circuit) for circuit in circuits
-        ]
-        return fitness_scores
+    def evaluate(self, circuits: List[Circuit]) -> None:
+        for circuit in circuits:
+            circuit.fitness = self.params.evaluator.evaluate(circuit)
 
-    def select(self, circuits: List[Any], fitness_scores: List[float], count: int) -> List[Any]:
-        # TODO: Adjust circuit typing once decided.
-
-        annotated_circuits: List = zip(circuits, fitness_scores)
-        annotated_circuits.sort(key=lambda item: item[1])
-
-        selected_annotated_circuits = annotated_circuits[:count]
-
-        selected_circuits = [
-            item[0] for item in selected_annotated_circuits
-        ]
-
+    def select(self, circuits: List[Circuit], count: int) -> List[Circuit]:
+        sorted_circuits = sorted(circuits, key=lambda circuit: circuit.fitness)
+        selected_circuits = sorted_circuits[:count]
         return selected_circuits
 
-    def mutate(self, circuits: List[Any], count: int) -> List[Any]:
-        # TODO: Adjust circuit typing once decided.
-        raise NotImplementedError()
+    def mutate(self, circuits: List[Circuit], count: int) -> List[Circuit]:
+        selected_parents = sample(circuits, k=count)
+
+        offspring = []
+        for circuit in selected_parents:
+            child = circuit.copy()
+
+            gate_i = randint(0, len(child.gates) - 1)
+
+            child.gates[gate_i] = random_gate(child.qubit_num)
+
+        return offspring
