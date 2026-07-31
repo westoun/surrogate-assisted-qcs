@@ -4,15 +4,15 @@ import numpy as np
 from random import sample, randint
 from typing import Any, List
 
-from .evaluator import IEvaluator
 from src.sas.utils.random_ import random_circuit, random_gate
-from sas.utils.circuit import Circuit
+from src.sas.utils.circuit import Circuit
+from src.sas.utils.simulate import simulate_unitary
+from src.sas.utils.fitness import compute_distance
 
 
 @dataclass
 class EAParams:
     target: np.ndarray
-    evaluator: IEvaluator
     parent_count: int
     offspring_count: int
     max_generations: int
@@ -54,7 +54,9 @@ class EvolutionaryAlgorithm():
 
     def evaluate(self, circuits: List[Circuit]) -> None:
         for circuit in circuits:
-            circuit.fitness = self.params.evaluator.evaluate(circuit)
+            unitary = simulate_unitary(circuit)
+            distance = compute_distance(unitary, self.params.target)
+            circuit.fitness = distance
 
     def select(self, circuits: List[Circuit], count: int) -> List[Circuit]:
         sorted_circuits = sorted(circuits, key=lambda circuit: circuit.fitness)
