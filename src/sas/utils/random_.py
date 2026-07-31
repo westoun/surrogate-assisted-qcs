@@ -1,5 +1,5 @@
 from typing import Any
-from src.sas.circuit import Circuit
+from sas.utils.circuit import Circuit
 
 
 def random_gate(qubit_num: int, uniform_configuration_choice: bool = True) -> Any:

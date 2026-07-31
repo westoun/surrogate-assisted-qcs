@@ -6,7 +6,7 @@ from typing import Any, List
 
 from .evaluator import IEvaluator
 from src.sas.utils.random_ import random_circuit, random_gate
-from src.sas.circuit import Circuit
+from sas.utils.circuit import Circuit
 
 
 @dataclass
