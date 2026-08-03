@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { email = "christoph.stein@jku.at" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "click>=8.1.8",
     "matplotlib>=3.9.4",
