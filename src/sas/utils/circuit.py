@@ -21,4 +21,4 @@ class Circuit():
         return my_copy
 
     def __repr__(self) -> str:
-        return "[" + ", ".join(self.gates) + "]"
+        return "[" + ", ".join([str(g) for g in self.gates]) + "]"
