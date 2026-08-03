@@ -7,7 +7,7 @@ from typing import Any, List
 from src.sas.utils.random_ import random_circuit, random_gate
 from src.sas.utils.circuit import Circuit
 from src.sas.utils.simulate import simulate_unitary
-from src.sas.utils.fitness import compute_distance
+from src.sas.utils.fitness import unitary_distance
 
 
 @dataclass
@@ -55,7 +55,7 @@ class EvolutionaryAlgorithm():
     def evaluate(self, circuits: List[Circuit]) -> None:
         for circuit in circuits:
             unitary = simulate_unitary(circuit)
-            distance = compute_distance(unitary, self.params.target)
+            distance = unitary_distance(unitary, self.params.target)
             circuit.fitness = distance
 
     def select(self, circuits: List[Circuit], count: int) -> List[Circuit]:

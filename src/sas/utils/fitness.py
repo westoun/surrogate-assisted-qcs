@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def compute_distance(unitary1: np.ndarray, unitary2: np.ndarray) -> float:
+def unitary_distance(unitary1: np.ndarray, unitary2: np.ndarray) -> float:
     rows1, cols1 = unitary1.shape
     rows2, cols2 = unitary2.shape
 
