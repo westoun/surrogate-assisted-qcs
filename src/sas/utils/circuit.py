@@ -1,11 +1,13 @@
 from copy import deepcopy
 from typing import List, Union
 
+from .gates import Gate
+
 
 class Circuit():
 
     qubit_num: int
-    gates: List[str]
+    gates: List[Gate]
     fitness: Union[float, None]
 
     def __init__(self, qubit_num: int):
@@ -17,3 +19,6 @@ class Circuit():
         my_copy = deepcopy(self)
         my_copy.fitness = None
         return my_copy
+
+    def __repr__(self) -> str:
+        return "[" + ", ".join(self.gates) + "]"
