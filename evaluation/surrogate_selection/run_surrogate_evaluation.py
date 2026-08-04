@@ -11,14 +11,11 @@ from typing import List, Tuple
 from uuid import uuid4
 
 from src.sas.surrogates.interface import ISurrogate
-from src.sas.utils.random_ import random_circuit
 from sas.types.circuit import Circuit
-from src.sas.utils.graph import circuit_to_dag, graph_to_hash
-from src.sas.utils.fitness import unitary_distance
-from src.sas.utils.simulate import simulate_unitary
+from src.sas.utils import random_circuit, circuit_to_dag, graph_to_hash, \
+    unitary_distance, simulate_unitary, TimeRecorder
 
 from logging_ import log_dataset_details
-from src.sas.utils.time import TimeRecorder
 
 
 def remove_duplicates(circuits: List[Circuit]) -> List[Circuit]:
