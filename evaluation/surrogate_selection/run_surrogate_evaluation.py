@@ -93,7 +93,7 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     "-cc",
     type=click.INT,
     default=10_000,
-    help="The number of gates per circuit. Default is 20.",
+    help="The number of gates per circuit. Default is 10_000.",
 )
 @click.option(
     "--seed",
