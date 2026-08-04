@@ -1,10 +1,12 @@
 
 import click
-from datetime import datetime
+import math
 import numpy as np
 import os
 import pickle
 import random
+from scipy.stats import spearmanr
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 import sys
 sys.path.append(os.path.abspath('../..'))  # nopep8
 from typing import List, Tuple
@@ -13,7 +15,8 @@ from uuid import uuid4
 from src.sas.surrogates.interface import ISurrogate
 from sas.types.circuit import Circuit
 from src.sas.utils import random_circuit, circuit_to_dag, graph_to_hash, \
-    unitary_distance, simulate_unitary, TimeRecorder
+    unitary_distance, simulate_unitary, TimeRecorder, get_timestamp, \
+    save_to_json
 
 from logging_ import log_dataset_details
 
@@ -108,7 +111,14 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     "-cc",
     type=click.INT,
     default=10_000,
-    help="The number of gates per circuit. Default is 10_000.",
+    help="The number of unique circuits to use as training data. Default is 10_000.",
+)
+@click.option(
+    "--train-every",
+    "-te",
+    type=click.INT,
+    default=100,
+    help="Number of circuits after which a new round of online training is performed. Default is 100.",
 )
 @click.option(
     "--seed",
@@ -124,7 +134,10 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     default=None,
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
-def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: int, seed: int, tag: str):
+def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: int,
+                   train_every: int,
+                   seed: int, tag: str):
+
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
@@ -132,7 +145,64 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
     target, circuits = load_or_generate_data(
         qubit_num, gate_count, circuit_count, seed)
 
-    # train model
+    X_train, X_test = circuits[:math.floor(
+        0.7 * len(circuits))], circuits[math.floor(0.7 * len(circuits)):]
+    y_true = [
+        circuit.fitness for circuit in X_test
+    ]
+
+    experiment_results = {
+        "meta": {
+            "start": get_timestamp(),
+            "end": None
+        },
+        "params": {
+            "model": model,
+            "qubit_num": qubit_num,
+            "gate_count": gate_count,
+            "circuit_count": circuit_count,
+            "train_every": train_every,
+            "seed": seed,
+            "tag": tag,
+
+        },
+        "data": {
+            "training_rounds": []
+        }
+    }
+
+    surrogate: ISurrogate = None
+
+    train_recorder = TimeRecorder()
+    pred_recorder = TimeRecorder()
+
+    training_rounds = math.floor(len(X_train) / train_every)
+    for training_round in range(training_rounds):
+
+        X_batch = X_train[training_round *
+                          train_every: (training_round + 1) * train_every]
+
+        with train_recorder:
+            surrogate.train(X_batch)
+
+        with pred_recorder:
+            y_pred = surrogate.predict(X_test)
+
+        rmse = root_mean_squared_error(y_true, y_pred)
+        rank_correlation = spearmanr(y_pred, y_true).statistic
+
+        experiment_results["data"]["training_rounds"].append({
+            "training_round": training_round,
+            "rmse": rmse,
+            "rank_correlation": rank_correlation,
+            "train_duration": train_recorder.duration,
+            "test_duration": pred_recorder.duration
+        })
+
+    experiment_results["meta"]["end"] = get_timestamp()
+
+    results_path = f"results/results_{qubit_num}qn{gate_count}gc{circuit_count}cc{model}m{seed}s.json"
+    save_to_json(experiment_results, results_path)
 
 
 if __name__ == "__main__":
