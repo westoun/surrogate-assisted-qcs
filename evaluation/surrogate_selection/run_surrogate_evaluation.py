@@ -6,13 +6,14 @@ import os
 import pickle
 import random
 from scipy.stats import spearmanr
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, \
+    mean_squared_error
 import sys
 sys.path.append(os.path.abspath('../..'))  # nopep8
 from typing import List, Tuple
 from uuid import uuid4
 
-from src.sas.surrogates.interface import ISurrogate
+from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
 from sas.types.circuit import Circuit
 from src.sas.utils import random_circuit, circuit_to_dag, graph_to_hash, \
     unitary_distance, simulate_unitary, TimeRecorder, get_timestamp, \
@@ -90,7 +91,8 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     "--model",
     "-m",
     type=click.STRING,
-    help="The surrogate model to be used."  # TODO: Add available values.
+    default="gate_frequency",
+    help="The surrogate model to be used. Default is 'gate_frequency'"
 )
 @click.option(
     "--qubit-num",
@@ -171,7 +173,11 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
         }
     }
 
-    surrogate: ISurrogate = None
+    if model == "gate_frequency":
+        surrogate: ISurrogate = GateFrequencySurrogate(qubit_num=qubit_num)
+    else:
+        raise NotImplementedError(
+            f"No implementation found for model '{model}'")
 
     train_recorder = TimeRecorder()
     pred_recorder = TimeRecorder()
@@ -188,12 +194,12 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
         with pred_recorder:
             y_pred = surrogate.predict(X_test)
 
-        rmse = root_mean_squared_error(y_true, y_pred)
+        mse = mean_squared_error(y_true, y_pred)
         rank_correlation = spearmanr(y_pred, y_true).statistic
 
         experiment_results["data"]["training_rounds"].append({
             "training_round": training_round,
-            "rmse": rmse,
+            "mse": mse,
             "rank_correlation": rank_correlation,
             "train_duration": train_recorder.duration,
             "test_duration": pred_recorder.duration
