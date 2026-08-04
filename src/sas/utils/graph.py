@@ -2,8 +2,7 @@
 import numpy as np
 import networkx as nx
 
-from .circuit import Circuit
-from .gates import Gate
+from src.sas.types import Circuit, Gate
 
 
 def circuit_to_dag(circuit: Circuit) -> nx.DiGraph:

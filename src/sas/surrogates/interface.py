@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
-from src.sas.utils.circuit import Circuit
+from sas.types.circuit import Circuit
 
 
 class ISurrogate(ABC):

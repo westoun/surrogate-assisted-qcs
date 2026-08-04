@@ -1,8 +1,7 @@
 from random import choice, randint, sample, choices
 from typing import Any
 
-from .circuit import Circuit
-from .gates import Gate, H, S, T, CX
+from src.sas.types import Circuit, Gate, H, S, T, CX
 
 
 def random_gate(qubit_num: int) -> Gate:

@@ -5,7 +5,7 @@ from random import sample, randint
 from typing import Any, List
 
 from src.sas.utils.random_ import random_circuit, random_gate
-from src.sas.utils.circuit import Circuit
+from sas.types.circuit import Circuit
 from src.sas.utils.simulate import simulate_unitary
 from src.sas.utils.fitness import unitary_distance
 

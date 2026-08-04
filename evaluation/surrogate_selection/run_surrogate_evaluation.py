@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from src.sas.surrogates.interface import ISurrogate
 from src.sas.utils.random_ import random_circuit
-from src.sas.utils.circuit import Circuit
+from sas.types.circuit import Circuit
 from src.sas.utils.graph import circuit_to_dag, graph_to_hash
 from src.sas.utils.fitness import unitary_distance
 from src.sas.utils.simulate import simulate_unitary
