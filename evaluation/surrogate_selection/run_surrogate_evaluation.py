@@ -1,5 +1,6 @@
 
 import click
+from datetime import datetime
 import numpy as np
 import os
 import pickle
@@ -15,6 +16,9 @@ from src.sas.utils.circuit import Circuit
 from src.sas.utils.graph import circuit_to_dag, graph_to_hash
 from src.sas.utils.fitness import unitary_distance
 from src.sas.utils.simulate import simulate_unitary
+
+from logging_ import log_dataset_details
+from src.sas.utils.time import TimeRecorder
 
 
 def remove_duplicates(circuits: List[Circuit]) -> List[Circuit]:
@@ -43,20 +47,34 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
             return data["target"], data["circuits"]
 
     else:
-        circuits = [random_circuit(
-            qubit_num=qubit_num, gate_count=gate_count
-        ) for _ in range(circuit_count)]
 
-        circuits = remove_duplicates(circuits)
+        recorder = TimeRecorder()
+        with recorder:
 
-        target_circuit = circuits[0]
-        target = simulate_unitary(target_circuit)
-        target_circuit.fitness = 0.0
+            circuits = [random_circuit(
+                qubit_num=qubit_num, gate_count=gate_count
+            ) for _ in range(circuit_count)]
 
-        for circuit in circuits[1:]:
-            unitary = simulate_unitary(circuit)
-            fitness = unitary_distance(unitary, target)
-            circuit.fitness = fitness
+            circuits = remove_duplicates(circuits)
+
+            target_circuit = circuits[0]
+            target = simulate_unitary(target_circuit)
+            target_circuit.fitness = 0.0
+
+            for circuit in circuits[1:]:
+                unitary = simulate_unitary(circuit)
+                fitness = unitary_distance(unitary, target)
+                circuit.fitness = fitness
+
+        log_dataset_details(
+            circuits=circuits,
+            qubit_num=qubit_num,
+            gate_count=gate_count,
+            circuit_count=circuit_count,
+            seed=seed,
+            duration=recorder.duration,
+            data_path=data_path
+        )
 
         with open(data_path, "wb") as data_file:
             pickle.dump({
