@@ -3,7 +3,7 @@ from typing import List
 
 from sas.types.circuit import Circuit
 from src.sas.utils.os import save_to_json
-from src.sas.utils.time import duration_to_seconds, get_timestamp
+from src.sas.utils.time import get_timestamp
 
 
 def log_dataset_details(circuits: List[Circuit],
