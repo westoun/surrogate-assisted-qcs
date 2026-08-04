@@ -12,5 +12,5 @@ class ISurrogate(ABC):
         ...
 
     @abstractmethod
-    def predict(self, circuit: Circuit) -> Tuple[float, float]:
+    def predict(self, circuits: List[Circuit]) -> List[float]:
         ...
