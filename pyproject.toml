@@ -13,6 +13,7 @@ dependencies = [
     "networkx>=3.2.1",
     "numpy>=2.0.2",
     "qiskit>=2.2.3",
+    "qiskit-aer>=0.17.2",
     "scikit-learn>=1.9.0",
     "scipy>=1.17.1",
     "torch>=2.13.0",
