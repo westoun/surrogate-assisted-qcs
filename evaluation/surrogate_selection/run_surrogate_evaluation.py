@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath('../..'))  # nopep8
 from typing import List, Tuple
 from uuid import uuid4
 
-from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
+from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, GATE_FREQUENCY_SURROGATE
 from sas.types.circuit import Circuit
 from src.sas.utils import random_circuit, circuit_to_dag, graph_to_hash, \
     unitary_distance, simulate_unitary, TimeRecorder, get_timestamp, \
@@ -91,8 +91,8 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     "--model",
     "-m",
     type=click.STRING,
-    default="gate_frequency",
-    help="The surrogate model to be used. Default is 'gate_frequency'"
+    default=GATE_FREQUENCY_SURROGATE,
+    help=f"The surrogate model to be used. Default is '{GATE_FREQUENCY_SURROGATE}'"
 )
 @click.option(
     "--qubit-num",
@@ -173,7 +173,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
         }
     }
 
-    if model == "gate_frequency":
+    if model == GATE_FREQUENCY_SURROGATE:
         surrogate: ISurrogate = GateFrequencySurrogate(qubit_num=qubit_num)
     else:
         raise NotImplementedError(

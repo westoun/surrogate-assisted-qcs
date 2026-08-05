@@ -9,6 +9,8 @@ from typing import List, Tuple
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
 
+GATE_FREQUENCY_SURROGATE = "gate_frequency"
+
 
 class Model(nn.Module):
     def __init__(self, qubit_num: int):

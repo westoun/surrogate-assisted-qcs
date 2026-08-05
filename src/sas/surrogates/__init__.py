@@ -1,2 +1,2 @@
 from .interface import ISurrogate
-from .gate_frequency_surrogate import GateFrequencySurrogate
+from .gate_frequency_surrogate import GateFrequencySurrogate, GATE_FREQUENCY_SURROGATE

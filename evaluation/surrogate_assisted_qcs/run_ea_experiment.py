@@ -9,7 +9,8 @@ from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
 from src.sas.utils import random_circuit, simulate_unitary
-from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
+from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, \
+    GATE_FREQUENCY_SURROGATE
 
 from logging_ import log_experiment_details, log_end_timestamp
 
@@ -20,8 +21,9 @@ from logging_ import log_experiment_details, log_end_timestamp
     "-m",
     type=click.STRING,
     default=None,
-    # TODO: Add available values.
-    help="The surrogate model to be used. Default is None."
+    help=("The surrogate model to be used. Default is None."
+          f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}'."
+          )
 )
 @click.option(
     "--qubit-num",
@@ -89,7 +91,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
 
     if model is None:
         surrogate = None
-    elif model == "gate_frequency":
+    elif model == GATE_FREQUENCY_SURROGATE:
         surrogate: ISurrogate = GateFrequencySurrogate(qubit_num)
     else:
         raise NotImplementedError(
