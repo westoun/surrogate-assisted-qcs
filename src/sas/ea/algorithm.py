@@ -48,7 +48,7 @@ class EvolutionaryAlgorithm():
                         parents, count=self.params.offspring_count)
                 else:
                     offspring = self.mutate(
-                        parents, count=self.params.offspring_count * 3)
+                        parents, count=self.params.offspring_count * 2)
                     self.surrogate.evaluate(offspring)
                     offspring = self.select(
                         offspring, count=self.params.offspring_count)
