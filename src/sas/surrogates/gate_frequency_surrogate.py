@@ -60,7 +60,7 @@ class GateFrequencySurrogate(ISurrogate):
     def __init__(self, qubit_num: int):
         self.model = Model(qubit_num=qubit_num)
 
-    def train(self, circuits: List[Circuit], epochs: int = 500) -> None:
+    def train(self, circuits: List[Circuit], epochs: int = 200) -> None:
         X = torch.Tensor([
             extract_gate_frequencies(circuit) for circuit in circuits
         ])

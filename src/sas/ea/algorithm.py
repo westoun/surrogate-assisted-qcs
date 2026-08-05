@@ -23,39 +23,44 @@ class EvolutionaryAlgorithm():
         self.surrogate = surrogate
 
     def run(self) -> None:
-        population = self.init_population(
-            count=self.params.parent_count + self.params.offspring_count)
+        timer = TimeRecorder()
 
-        self.evaluate(population)
+        with timer:
+            population = self.init_population(
+                count=self.params.parent_count + self.params.offspring_count)
 
-        if self.surrogate is not None:
-            self.surrogate.train(population)
+            self.evaluate(population)
+
+            if self.surrogate is not None:
+                self.surrogate.train(population, epochs=500)
 
         log_epoch_results(
-            generation=0, population=population, params=self.params)
+            generation=0, population=population, duration=timer.duration, params=self.params)
 
         for generation in range(1, self.params.max_generations + 1):
 
-            parents = self.select(population, count=self.params.parent_count)
+            with timer:
+                parents = self.select(
+                    population, count=self.params.parent_count)
 
-            if self.surrogate is None:
-                offspring = self.mutate(
-                    parents, count=self.params.offspring_count)
-            else:
-                offspring = self.mutate(
-                    parents, count=self.params.offspring_count * 3)
-                self.surrogate.evaluate(offspring)
-                offspring = self.select(
-                    offspring, count=self.params.offspring_count)
+                if self.surrogate is None:
+                    offspring = self.mutate(
+                        parents, count=self.params.offspring_count)
+                else:
+                    offspring = self.mutate(
+                        parents, count=self.params.offspring_count * 3)
+                    self.surrogate.evaluate(offspring)
+                    offspring = self.select(
+                        offspring, count=self.params.offspring_count)
 
-            population = parents + offspring
+                population = parents + offspring
 
-            self.evaluate(population)
-            if self.surrogate is not None:
-                self.surrogate.train(population)
+                self.evaluate(population)
+                if self.surrogate is not None:
+                    self.surrogate.train(population)
 
             log_epoch_results(
-                generation=generation, population=population, params=self.params)
+                generation=generation, population=population, duration=timer.duration, params=self.params)
 
     def init_population(self, count: int) -> List[Circuit]:
         population = [
