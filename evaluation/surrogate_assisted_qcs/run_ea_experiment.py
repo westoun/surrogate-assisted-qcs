@@ -11,6 +11,8 @@ from src.sas.ea import EvolutionaryAlgorithm, EAParams
 from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
 
+from logging_ import log_experiment_details, log_end_timestamp
+
 
 @click.command()
 @click.option(
@@ -50,6 +52,23 @@ from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
 def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
+    parent_count = 10
+    offspring_count = 10
+    max_generations = 1000
+    logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s"
+
+    log_experiment_details(
+        model=model,
+        qubit_num=qubit_num,
+        gate_count=gate_count,
+        seed=seed,
+        tag=tag,
+        parent_count=parent_count,
+        offspring_count=offspring_count,
+        max_generations=max_generations,
+        logging_prefix=logging_prefix
+    )
+
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
@@ -60,12 +79,12 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
 
     params = EAParams(
         target=target,
-        parent_count=10,
-        offspring_count=10,
-        max_generations=500,
+        parent_count=parent_count,
+        offspring_count=offspring_count,
+        max_generations=max_generations,
         qubit_num=qubit_num,
         gate_count=gate_count,
-        logging_prefix=f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s"
+        logging_prefix=logging_prefix
     )
 
     if model is None:
@@ -80,6 +99,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
 
     ea = EvolutionaryAlgorithm(params, surrogate)
     ea.run()
+
+    log_end_timestamp(logging_prefix=logging_prefix)
 
 
 if __name__ == "__main__":
