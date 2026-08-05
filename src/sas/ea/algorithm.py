@@ -48,7 +48,7 @@ class EvolutionaryAlgorithm():
                         parents, count=self.params.offspring_count)
                 else:
                     offspring = self.mutate(
-                        parents, count=self.params.offspring_count * 2)
+                        parents, count=self.params.offspring_count * 3)
                     self.surrogate.evaluate(offspring)
                     offspring = self.select(
                         offspring, count=self.params.offspring_count)
@@ -57,7 +57,7 @@ class EvolutionaryAlgorithm():
 
                 self.evaluate(population)
                 if self.surrogate is not None:
-                    self.surrogate.train(population)
+                    self.surrogate.train(population, epochs=100)
 
             log_epoch_results(
                 generation=generation, population=population, duration=timer.duration, params=self.params)
