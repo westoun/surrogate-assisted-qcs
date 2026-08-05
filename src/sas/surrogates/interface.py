@@ -14,3 +14,9 @@ class ISurrogate(ABC):
     @abstractmethod
     def predict(self, circuits: List[Circuit]) -> List[float]:
         ...
+
+    def evaluate(self, circuits: List[Circuit]) -> None:
+        fitness_scores = self.predict(circuits)
+
+        for circuit, fitness in zip(circuits, fitness_scores):
+            circuit.fitness = fitness
