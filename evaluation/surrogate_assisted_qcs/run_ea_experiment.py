@@ -22,7 +22,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     "-m",
     type=click.STRING,
     default=None,
-    help=("The surrogate model to be used. Default is None."
+    help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}'."
           )
 )
