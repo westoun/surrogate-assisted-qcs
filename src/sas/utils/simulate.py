@@ -1,6 +1,7 @@
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Operator
+from qiskit.compiler import transpile
+from qiskit.quantum_info import Operator, Statevector
 
 from src.sas.types import Circuit, H, S, T, CX
 
@@ -11,7 +12,7 @@ def simulate_unitary(circuit: Circuit) -> np.ndarray:
     return unitary
 
 
-def circuit_to_qiskit(circuit: Circuit) -> QuantumCircuit:
+def circuit_to_qiskit(circuit: Circuit, add_measurement: bool = False) -> QuantumCircuit:
     qiskit_circuit = QuantumCircuit(circuit.qubit_num)
 
     for gate in circuit.gates:
@@ -27,4 +28,13 @@ def circuit_to_qiskit(circuit: Circuit) -> QuantumCircuit:
             raise NotImplementedError(
                 f"No mapping found for gate type '{type(gate)}'")
 
+    if add_measurement:
+        qiskit_circuit.measure_all()
+
     return qiskit_circuit
+
+
+def simulate_state_vector(circuit: Circuit) -> np.ndarray:
+    qiskit_circuit = circuit_to_qiskit(circuit)
+    vector = Statevector.from_circuit(qiskit_circuit)
+    return vector

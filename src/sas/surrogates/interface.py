@@ -8,7 +8,7 @@ from sas.types.circuit import Circuit
 class ISurrogate(ABC):
 
     @abstractmethod
-    def train(self, circuits: List[Circuit]) -> None:
+    def train(self, circuits: List[Circuit], epochs: int = 200) -> None:
         ...
 
     @abstractmethod
