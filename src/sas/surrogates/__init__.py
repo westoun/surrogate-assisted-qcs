@@ -1,3 +1,4 @@
 from .interface import ISurrogate
 from .gate_frequency_surrogate import GateFrequencySurrogate, GATE_FREQUENCY_SURROGATE
 from .vector_surrogate import StateVectorSurrogate, STATE_VECTOR_SURROGATE
+from .shot_distance_surrogate import SHOT_DISTANCE_SURROGATE, ShotDistanceSurrogate

@@ -15,7 +15,8 @@ from typing import List, Tuple
 from uuid import uuid4
 
 from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, \
-    GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE
+    GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
+    ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE
 from sas.types.circuit import Circuit
 from src.sas.utils import random_circuit, circuit_to_dag, graph_to_hash, \
     unitary_distance, simulate_unitary, TimeRecorder, get_timestamp, \
@@ -95,7 +96,8 @@ def load_or_generate_data(qubit_num: int, gate_count: int, circuit_count: int, s
     type=click.STRING,
     default=GATE_FREQUENCY_SURROGATE,
     help=(f"The surrogate model to be used. Default is '{GATE_FREQUENCY_SURROGATE}'. "
-          f"Allowed: '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}'.")
+          f"Allowed: '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
+          f"'{SHOT_DISTANCE_SURROGATE}'.")
 )
 @click.option(
     "--qubit-num",
@@ -181,6 +183,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
         surrogate: ISurrogate = GateFrequencySurrogate(qubit_num=qubit_num)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
+    elif model == SHOT_DISTANCE_SURROGATE:
+        surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=100)
     else:
         raise NotImplementedError(
             f"No implementation found for model '{model}'")

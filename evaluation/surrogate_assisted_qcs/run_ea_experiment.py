@@ -5,13 +5,14 @@ import os
 import random
 import sys
 sys.path.append(os.path.abspath('../..'))  # nopep8
-import torch 
+import torch
 from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
 from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, \
-    GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE
+    GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
+    ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE
 
 from logging_ import log_experiment_details, log_end_timestamp
 
@@ -23,7 +24,8 @@ from logging_ import log_experiment_details, log_end_timestamp
     type=click.STRING,
     default=None,
     help=("The surrogate model to be used. Default is None. "
-          f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}'."
+          f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
+          f"'{SHOT_DISTANCE_SURROGATE}'."
           )
 )
 @click.option(
@@ -96,7 +98,9 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     elif model == GATE_FREQUENCY_SURROGATE:
         surrogate: ISurrogate = GateFrequencySurrogate(qubit_num)
     elif model == STATE_VECTOR_SURROGATE:
-            surrogate: ISurrogate = StateVectorSurrogate(target=target)
+        surrogate: ISurrogate = StateVectorSurrogate(target=target)
+    elif model == SHOT_DISTANCE_SURROGATE:
+        surrogate: ISurrogate = ShotDistanceSurrogate(target=target)
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
