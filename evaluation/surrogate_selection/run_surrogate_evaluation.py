@@ -10,6 +10,7 @@ from sklearn.metrics import mean_absolute_error, root_mean_squared_error, \
     mean_squared_error
 import sys
 sys.path.append(os.path.abspath('../..'))  # nopep8
+import torch
 from typing import List, Tuple
 from uuid import uuid4
 
@@ -143,6 +144,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, circuit_count: i
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
+        torch.manual_seed(seed)
 
     target, circuits = load_or_generate_data(
         qubit_num, gate_count, circuit_count, seed)

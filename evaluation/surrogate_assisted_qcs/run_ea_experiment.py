@@ -5,6 +5,7 @@ import os
 import random
 import sys
 sys.path.append(os.path.abspath('../..'))  # nopep8
+import torch 
 from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
@@ -74,6 +75,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
+        torch.manual_seed(seed)
 
     # Create synthesis target using simulator
     target_circuit = random_circuit(qubit_num, gate_count)
