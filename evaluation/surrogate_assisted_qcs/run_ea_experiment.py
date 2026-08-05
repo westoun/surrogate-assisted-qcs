@@ -54,7 +54,7 @@ from logging_ import log_experiment_details, log_end_timestamp
 def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 10
     offspring_count = 10
-    max_generations = 1000
+    max_generations = 5000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s"
 
     log_experiment_details(
