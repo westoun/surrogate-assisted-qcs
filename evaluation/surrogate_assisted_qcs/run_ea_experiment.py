@@ -1,20 +1,25 @@
 
 import click
 import numpy as np
+import os
 import random
+import sys
+sys.path.append(os.path.abspath('../..'))  # nopep8
 from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
-from src.sas.utils.random_ import random_circuit
+from src.sas.utils import random_circuit, simulate_unitary
+from src.sas.surrogates import ISurrogate, GateFrequencySurrogate
 
 
 @click.command()
 @click.option(
-    "--evaluation-strategy",
-    "-es",
+    "--model",
+    "-m",
     type=click.STRING,
-    default="exact",
-    help="The evaluation strategy to be used."  # TODO: Add available values.
+    default=None,
+    # TODO: Add available values.
+    help="The surrogate model to be used. Default is None."
 )
 @click.option(
     "--qubit-num",
@@ -44,20 +49,37 @@ from src.sas.utils.random_ import random_circuit
     default=None,
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
-def run_experiment(evaluation_strategy: str, qubit_num: int, gate_count: int, seed: int, tag: str):
+def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
 
     # Create synthesis target using simulator
+    target_circuit = random_circuit(qubit_num, gate_count)
+    target = simulate_unitary(target_circuit)
 
-    # Setup Evaluation Strategy
+    params = EAParams(
+        target=target,
+        parent_count=10,
+        offspring_count=10,
+        max_generations=500,
+        qubit_num=qubit_num,
+        gate_count=gate_count,
+        logging_prefix=f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s"
+    )
 
-    # Setup EA parameters
+    if model is None:
+        surrogate = None
+    elif model == "gate_frequency":
+        surrogate: ISurrogate = GateFrequencySurrogate(qubit_num)
+    else:
+        raise NotImplementedError(
+            f"No implementation found for surrogate model '{model}'.")
 
-    # Setup EA
+    # TODO: Log experiment parameters
 
-    # Run EA
+    ea = EvolutionaryAlgorithm(params, surrogate)
+    ea.run()
 
 
 if __name__ == "__main__":

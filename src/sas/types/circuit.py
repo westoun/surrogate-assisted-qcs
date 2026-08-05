@@ -20,6 +20,7 @@ class Circuit():
     def copy(self) -> "Circuit":
         my_copy = deepcopy(self)
         my_copy.fitness = None
+        my_copy.simulated = False
         return my_copy
 
     def __repr__(self) -> str:

@@ -6,18 +6,11 @@ from typing import Any, List
 
 from sas.types.circuit import Circuit
 from src.sas.utils import simulate_unitary, unitary_distance, \
-    random_circuit, random_gate
+    random_circuit, random_gate, TimeRecorder
 from src.sas.surrogates import ISurrogate
 
-
-@dataclass
-class EAParams:
-    target: np.ndarray
-    parent_count: int
-    offspring_count: int
-    max_generations: int
-    qubit_num: int
-    gate_count: int
+from .params import EAParams
+from .logging_ import log_epoch_results
 
 
 class EvolutionaryAlgorithm():
@@ -33,12 +26,15 @@ class EvolutionaryAlgorithm():
         population = self.init_population(
             count=self.params.parent_count + self.params.offspring_count)
 
-        for generation in range(self.params.max_generations):
+        self.evaluate(population)
 
-            self.evaluate(population)
+        if self.surrogate is not None:
             self.surrogate.train(population)
 
-            # check stopping criterion
+        log_epoch_results(
+            generation=0, population=population, params=self.params)
+
+        for generation in range(1, self.params.max_generations + 1):
 
             parents = self.select(population, count=self.params.parent_count)
 
@@ -53,6 +49,13 @@ class EvolutionaryAlgorithm():
                     offspring, count=self.params.offspring_count)
 
             population = parents + offspring
+
+            self.evaluate(population)
+            if self.surrogate is not None:
+                self.surrogate.train(population)
+
+            log_epoch_results(
+                generation=generation, population=population, params=self.params)
 
     def init_population(self, count: int) -> List[Circuit]:
         population = [
@@ -84,7 +87,8 @@ class EvolutionaryAlgorithm():
             child = circuit.copy()
 
             gate_i = randint(0, len(child.gates) - 1)
-
             child.gates[gate_i] = random_gate(child.qubit_num)
+
+            offspring.append(child)
 
         return offspring
