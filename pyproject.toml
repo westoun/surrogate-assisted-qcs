@@ -24,3 +24,9 @@ sas = "sas:main"
 [build-system]
 requires = ["uv_build>=0.11.32,<0.12.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.11.1",
+    "pandas>=3.0.5",
+]
