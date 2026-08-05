@@ -100,7 +100,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
-        surrogate: ISurrogate = ShotDistanceSurrogate(target=target)
+        surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=100)
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
