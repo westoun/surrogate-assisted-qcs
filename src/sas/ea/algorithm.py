@@ -6,7 +6,7 @@ from typing import Any, List
 
 from sas.types.circuit import Circuit
 from src.sas.utils import simulate_unitary, unitary_distance, \
-    random_circuit, random_gate, TimeRecorder
+    random_circuit, random_gate, TimeRecorder, MultiTimeRecorder
 from src.sas.surrogates import ISurrogate
 
 from .params import EAParams
@@ -23,44 +23,67 @@ class EvolutionaryAlgorithm():
         self.surrogate = surrogate
 
     def run(self) -> None:
-        timer = TimeRecorder()
+        recorder = MultiTimeRecorder()
 
-        with timer:
+        with recorder["ea"]:
             population = self.init_population(
                 count=self.params.parent_count + self.params.offspring_count)
 
+        with recorder["eval"]:
             self.evaluate(population)
 
+        with recorder["train"]:
             if self.surrogate is not None:
                 self.surrogate.train(population, epochs=500)
 
         log_epoch_results(
-            generation=0, population=population, duration=timer.duration, params=self.params)
+            generation=0, population=population,
+            ea_duration=recorder["ea"].duration,
+            eval_duration=recorder["eval"].duration,
+            train_duration=recorder["train"].duration,
+            pred_duration=recorder["pred"].duration,
+            params=self.params)
 
         for generation in range(1, self.params.max_generations + 1):
 
-            with timer:
-                parents = self.select(
-                    population, count=self.params.parent_count)
-
-                if self.surrogate is None:
+            if self.surrogate is None:
+                with recorder["ea"]:
+                    parents = self.select(
+                        population, count=self.params.parent_count)
                     offspring = self.mutate(
                         parents, count=self.params.offspring_count)
-                else:
+
+            else:
+
+                with recorder["ea"]:
+                    parents = self.select(
+                        population, count=self.params.parent_count)
                     offspring = self.mutate(
                         parents, count=self.params.offspring_count * 3)
+
+                with recorder["pred"]:
                     self.surrogate.evaluate(offspring)
+
+                with recorder["ea"]:
                     offspring = self.select(
                         offspring, count=self.params.offspring_count)
 
-                population = parents + offspring
+            population = parents + offspring
 
+            with recorder["eval"]:
                 self.evaluate(population)
+
+            with recorder["train"]:
                 if self.surrogate is not None:
                     self.surrogate.train(population, epochs=100)
 
             log_epoch_results(
-                generation=generation, population=population, duration=timer.duration, params=self.params)
+                generation=generation, population=population,
+                ea_duration=recorder["ea"].duration,
+                eval_duration=recorder["eval"].duration,
+                train_duration=recorder["train"].duration,
+                pred_duration=recorder["pred"].duration,
+                params=self.params)
 
     def init_population(self, count: int) -> List[Circuit]:
         population = [
