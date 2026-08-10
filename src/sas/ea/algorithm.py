@@ -2,7 +2,11 @@
 from dataclasses import dataclass
 import numpy as np
 from random import sample, randint, choices
-from typing import Any, List
+from scipy.stats import spearmanr
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, \
+    mean_squared_error
+from typing import Any, List, Tuple
+import warnings
 
 from sas.types.circuit import Circuit
 from src.sas.utils import simulate_unitary, unitary_distance, \
@@ -42,6 +46,7 @@ class EvolutionaryAlgorithm():
             eval_duration=recorder["eval"].duration,
             train_duration=recorder["train"].duration,
             pred_duration=recorder["pred"].duration,
+            fitness_mse=None, rank_correlation=None,
             params=self.params)
 
         for generation in range(1, self.params.max_generations + 1):
@@ -68,10 +73,28 @@ class EvolutionaryAlgorithm():
                     offspring = self.select(
                         offspring, count=self.params.offspring_count)
 
-            population = parents + offspring
+            predicted_fitness_scores = [
+                circuit.fitness for circuit in offspring
+            ]
 
             with recorder["eval"]:
-                self.evaluate(population)
+                self.evaluate(offspring)
+
+            actual_fitness_scores = [
+                circuit.fitness for circuit in offspring
+            ]
+
+            fitness_mse = mean_squared_error(
+                predicted_fitness_scores, actual_fitness_scores)
+
+            # Spearmanr is not defined if one of the input arrays has
+            # a stdev of 0. In that case, returns nan.
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                rank_correlation = spearmanr(
+                    predicted_fitness_scores, actual_fitness_scores).statistic
+
+            population = parents + offspring
 
             with recorder["train"]:
                 if self.surrogate is not None:
@@ -83,6 +106,8 @@ class EvolutionaryAlgorithm():
                 eval_duration=recorder["eval"].duration,
                 train_duration=recorder["train"].duration,
                 pred_duration=recorder["pred"].duration,
+                fitness_mse=fitness_mse,
+                rank_correlation=rank_correlation,
                 params=self.params)
 
     def init_population(self, count: int) -> List[Circuit]:
