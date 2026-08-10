@@ -6,23 +6,20 @@ def get_timestamp() -> str:
 
 
 class TimeRecorder():
-    aggregate: bool
-    duration: float
+    _duration: float
 
-    def __init__(self, aggregate: bool = False):
-        self.aggregate = aggregate
-        self.duration = 0.0
+    def __init__(self):
+        self._duration = 0.0
 
     def __enter__(self):
-        if not self.aggregate:
-            self.duration = 0.0
-
-        self.start = datetime.now()
+        self._start = datetime.now()
 
     def __exit__(self, exc_type, exc, tb):
-        self.duration = (datetime.now() - self.start).total_seconds()
-        self.start = None
+        self._duration += (datetime.now() - self._start).total_seconds()
+        self._start = None
 
-    def reset(self) -> None:
-        self.start = None
-        self.duration = 0.0
+    @property
+    def duration(self) -> float:
+        tmp = self._duration
+        self._duration = 0.0
+        return tmp
