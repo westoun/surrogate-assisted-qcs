@@ -1,6 +1,6 @@
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from sas.types.circuit import Circuit
 
@@ -20,3 +20,14 @@ class ISurrogate(ABC):
 
         for circuit, fitness in zip(circuits, fitness_scores):
             circuit.fitness = fitness
+
+    @property
+    @abstractmethod
+    def type(self) -> str:
+        ...
+
+    @property
+    def params(self) -> Dict:
+        return {
+            "type": self.type
+        }

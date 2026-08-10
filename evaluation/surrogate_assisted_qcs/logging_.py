@@ -1,20 +1,16 @@
 
-from typing import List
+from typing import List, Dict
 
-from sas.types.circuit import Circuit
+from src.sas.ea import EAParams
 from src.sas.utils.os import save_to_json, load_from_json
 from src.sas.utils.time import get_timestamp
 
 
 def log_experiment_details(
-    model: str,
-    qubit_num: int,
-    gate_count: int,
+    ea_params: EAParams,
+    surrogate_params: Dict,
     seed: int,
     tag: str,
-    parent_count: int,
-    offspring_count: int,
-    max_generations: int,
     logging_prefix: str
 ) -> None:
     target_path = logging_prefix + "_config.json"
@@ -24,15 +20,17 @@ def log_experiment_details(
             "start": get_timestamp(),
         },
         "params": {
-            "logging_prefix": logging_prefix,
-            "model": model,
-            "qubit_num": qubit_num,
-            "gate_count": gate_count,
+            "ea": {
+                "parent_count": ea_params.parent_count,
+                "offspring_count": ea_params.offspring_count,
+                "max_generations": ea_params.max_generations,
+                "qubit_num": ea_params.qubit_num,
+                "gate_count": ea_params.gate_count
+            },
+            "surrogate": surrogate_params,
             "seed": seed,
             "tag": tag,
-            "parent_count": parent_count,
-            "offspring_count": offspring_count,
-            "max_generations": max_generations,
+            "logging_prefix": logging_prefix
         }
     }
     save_to_json(config, target_path)

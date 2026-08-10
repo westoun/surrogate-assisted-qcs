@@ -4,7 +4,7 @@ from random import shuffle
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
@@ -57,6 +57,8 @@ def extract_gate_frequencies(circuit: Circuit) -> List:
 
 
 class GateFrequencySurrogate(ISurrogate):
+    type = GATE_FREQUENCY_SURROGATE
+
     model: Model
     max_epochs: int
     patience: int
@@ -114,3 +116,12 @@ class GateFrequencySurrogate(ISurrogate):
                 pred[0] for pred in predictions
             ]
             return predictions
+
+    @property
+    def params(self) -> Dict:
+        return {
+            "type": self.type,
+            "max_epochs": self.max_epochs,
+            "patience": self.patience,
+            "delta": self.delta
+        }

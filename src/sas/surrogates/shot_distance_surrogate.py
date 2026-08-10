@@ -1,7 +1,7 @@
 
 import numpy as np
 from scipy.stats import wasserstein_distance
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
@@ -18,6 +18,8 @@ def state_to_distribution(state: np.ndarray) -> List:
 
 
 class ShotDistanceSurrogate(ISurrogate):
+    type = SHOT_DISTANCE_SURROGATE
+
     target_distribution: List
     shots: int
 
@@ -41,3 +43,9 @@ class ShotDistanceSurrogate(ISurrogate):
             fitness_scores.append(distance)
 
         return fitness_scores
+
+    @property
+    def params(self) -> Dict:
+        return {
+            "shots": self.shots,
+        }

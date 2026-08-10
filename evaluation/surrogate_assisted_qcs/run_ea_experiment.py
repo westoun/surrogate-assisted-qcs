@@ -62,18 +62,6 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     max_generations = 1000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s_{str(uuid4())}"
 
-    log_experiment_details(
-        model=model,
-        qubit_num=qubit_num,
-        gate_count=gate_count,
-        seed=seed,
-        tag=tag,
-        parent_count=parent_count,
-        offspring_count=offspring_count,
-        max_generations=max_generations,
-        logging_prefix=logging_prefix
-    )
-
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
@@ -83,7 +71,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     target_circuit = random_circuit(qubit_num, gate_count)
     target = simulate_unitary(target_circuit)
 
-    params = EAParams(
+    ea_params = EAParams(
         target=target,
         parent_count=parent_count,
         offspring_count=offspring_count,
@@ -105,9 +93,20 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
 
-    # TODO: Log experiment parameters
+    if surrogate is None:
+        surrogate_params = {}
+    else:
+        surrogate_params = surrogate.params
 
-    ea = EvolutionaryAlgorithm(params, surrogate)
+    log_experiment_details(
+        ea_params=ea_params,
+        surrogate_params=surrogate_params,
+        seed=seed,
+        tag=tag,
+        logging_prefix=logging_prefix
+    )
+
+    ea = EvolutionaryAlgorithm(ea_params, surrogate)
     ea.run()
 
     log_end_timestamp(logging_prefix=logging_prefix)

@@ -11,6 +11,8 @@ STATE_VECTOR_SURROGATE = "state_vector"
 
 
 class StateVectorSurrogate(ISurrogate):
+    type = STATE_VECTOR_SURROGATE
+
     target_vector: np.ndarray
 
     def __init__(self, target: np.ndarray):
