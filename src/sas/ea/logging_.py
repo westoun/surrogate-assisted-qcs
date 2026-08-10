@@ -21,7 +21,7 @@ def log_epoch_results(generation: int, population: List[Circuit],
         if add_header:
             header = "generation; fitness_best; fitness_median; fitness_mean; fitness_stdev; "
             header += "ea_duration; eval_duration; train_duration; pred_duration; total_duration; "
-            header += "ea_memory; eval_memory; train_memory; pred_memory; "
+            header += "ea_memory; eval_memory; train_memory; pred_memory; max_memory; "
             header += "fitness_mse; rank_correlation"
             target_file.write(header + "\n")
 
@@ -30,9 +30,10 @@ def log_epoch_results(generation: int, population: List[Circuit],
         ]
 
         total_duration = ea_duration + eval_duration + train_duration + pred_duration
+        max_memory = max(ea_memory, eval_memory, train_memory, pred_memory)
 
         line = f"{generation}; {min(fitness_scores)}; {median(fitness_scores)}; {mean(fitness_scores)}; {stdev(fitness_scores)}; "
         line += f"{ea_duration}; {eval_duration}; {train_duration}; {pred_duration}; {total_duration}; "
-        line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; "
+        line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}"
         line += f"{fitness_mse}; {rank_correlation}"
         target_file.write(line + "\n")
