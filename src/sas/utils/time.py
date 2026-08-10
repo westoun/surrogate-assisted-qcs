@@ -6,6 +6,11 @@ def get_timestamp() -> str:
 
 
 class TimeRecorder():
+    """Context manager that tracks the amount of time spent within its
+    context. Said time is accumulated until the .duration value is 
+    retrieved.
+    """
+
     _duration: float
 
     def __init__(self):
