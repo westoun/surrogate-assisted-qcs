@@ -12,7 +12,8 @@ from src.sas.ea import EvolutionaryAlgorithm, EAParams
 from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, \
     GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
-    ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE
+    ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
+    RANDOM_FITNESS_SURROGATE
 
 from logging_ import log_experiment_details, log_end_timestamp
 
@@ -25,7 +26,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     default=None,
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
-          f"'{SHOT_DISTANCE_SURROGATE}'."
+          f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}'."
           )
 )
 @click.option(
@@ -57,8 +58,8 @@ from logging_ import log_experiment_details, log_end_timestamp
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
 def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
-    parent_count = 10
-    offspring_count = 10
+    parent_count = 100
+    offspring_count = 100
     max_generations = 1000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s_{str(uuid4())}"
 
@@ -89,6 +90,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
         surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=100)
+    elif model == RANDOM_FITNESS_SURROGATE:
+        surrogate: ISurrogate = RandomFitnessSurrogate()
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
