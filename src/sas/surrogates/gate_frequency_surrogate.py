@@ -58,11 +58,17 @@ def extract_gate_frequencies(circuit: Circuit) -> List:
 
 class GateFrequencySurrogate(ISurrogate):
     model: Model
+    max_epochs: int
+    patience: int
+    delta: float
 
-    def __init__(self, qubit_num: int):
+    def __init__(self, qubit_num: int, max_epochs: int = 200, patience: int = 5, delta: float = 1e-5):
         self.model = Model(qubit_num=qubit_num)
+        self.max_epochs = max_epochs
+        self.patience = patience
+        self.delta = delta
 
-    def train(self, circuits: List[Circuit], epochs: int = 200) -> None:
+    def train(self, circuits: List[Circuit]) -> None:
         X = torch.Tensor([
             extract_gate_frequencies(circuit) for circuit in circuits
         ])
@@ -73,7 +79,10 @@ class GateFrequencySurrogate(ISurrogate):
         criterion = torch.nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters())
 
-        for epoch in range(epochs):
+        last_loss = np.inf
+        epochs_without_improvement = 0
+
+        for epoch in range(self.max_epochs):
 
             optimizer.zero_grad()
 
@@ -83,6 +92,16 @@ class GateFrequencySurrogate(ISurrogate):
 
             loss.backward()
             optimizer.step()
+
+            if last_loss - loss <= self.delta:
+                epochs_without_improvement += 1
+            else:
+                epochs_without_improvement = 0
+
+            last_loss = loss
+
+            if self.patience is not None and epochs_without_improvement >= self.patience:
+                break
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
         with torch.no_grad():

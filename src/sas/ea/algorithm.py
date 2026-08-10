@@ -38,7 +38,7 @@ class EvolutionaryAlgorithm():
 
         with recorder["train"]:
             if self.surrogate is not None:
-                self.surrogate.train(population, epochs=500)
+                self.surrogate.train(population)
 
         log_epoch_results(
             generation=0, population=population,
@@ -91,7 +91,7 @@ class EvolutionaryAlgorithm():
 
             with recorder["train"]:
                 if self.surrogate is not None:
-                    self.surrogate.train(population, epochs=100)
+                    self.surrogate.train(population)
 
             log_epoch_results(
                 generation=generation, population=population,
