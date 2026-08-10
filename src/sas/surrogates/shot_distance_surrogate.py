@@ -47,5 +47,6 @@ class ShotDistanceSurrogate(ISurrogate):
     @property
     def params(self) -> Dict:
         return {
+            "type": self.type,
             "shots": self.shots,
         }
