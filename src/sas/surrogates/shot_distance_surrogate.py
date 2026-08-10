@@ -29,7 +29,7 @@ class ShotDistanceSurrogate(ISurrogate):
 
         self.shots = shots
 
-    def train(self, circuits: List[Circuit], epochs: int = 200) -> None:
+    def train(self, circuits: List[Circuit]) -> None:
         pass  # Do nothing.
 
     def predict(self, circuits: List[Circuit]) -> List[float]:

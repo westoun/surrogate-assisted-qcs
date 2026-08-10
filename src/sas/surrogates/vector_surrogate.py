@@ -18,7 +18,7 @@ class StateVectorSurrogate(ISurrogate):
     def __init__(self, target: np.ndarray):
         self.target_vector = target.T[0]
 
-    def train(self, circuits: List[Circuit], epochs: int = 200) -> None:
+    def train(self, circuits: List[Circuit]) -> None:
         pass  # Do nothing.
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
