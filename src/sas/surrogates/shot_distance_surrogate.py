@@ -1,6 +1,8 @@
 
 import numpy as np
-from scipy.stats import wasserstein_distance
+from scipy.stats import wasserstein_distance, \
+    entropy
+from scipy.spatial.distance import jensenshannon
 from typing import List, Tuple, Dict
 
 from src.sas.types import Circuit, H, S, T, CX
@@ -38,7 +40,7 @@ class ShotDistanceSurrogate(ISurrogate):
         for circuit in circuits:
             shot_distribution = get_shot_distribution(
                 circuit, shots=self.shots)
-            distance = wasserstein_distance(
+            distance = jensenshannon(
                 shot_distribution, self.target_distribution)
             fitness_scores.append(distance)
 
