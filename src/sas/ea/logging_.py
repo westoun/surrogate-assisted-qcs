@@ -34,6 +34,6 @@ def log_epoch_results(generation: int, population: List[Circuit],
 
         line = f"{generation}; {min(fitness_scores)}; {median(fitness_scores)}; {mean(fitness_scores)}; {stdev(fitness_scores)}; "
         line += f"{ea_duration}; {eval_duration}; {train_duration}; {pred_duration}; {total_duration}; "
-        line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}"
+        line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}; "
         line += f"{fitness_mse}; {rank_correlation}"
         target_file.write(line + "\n")
