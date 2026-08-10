@@ -5,3 +5,4 @@ from .simulate import simulate_unitary, simulate_state_vector, \
     get_shot_distribution
 from .time import get_timestamp, TimeRecorder, MultiTimeRecorder
 from .graph import circuit_to_dag, graph_to_hash
+from .memory import MemoryRecorder, MultiMemoryRecorder
