@@ -51,8 +51,10 @@ def extract_gate_frequencies(circuit: Circuit) -> List:
             gate_frequencies[4 + 4 * gate.target + 2] += 1 / len(circuit.gates)
         elif type(gate) == CX:
             gate_frequencies[3] += 1 / len(circuit.gates)
-            gate_frequencies[4 + 4 * gate.control + 3] += 0.5 / len(circuit.gates)
-            gate_frequencies[4 + 4 * gate.target + 3] += 0.5 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.control +
+                             3] += 0.5 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.target +
+                             3] += 0.5 / len(circuit.gates)
         else:
             raise NotImplementedError(
                 f"No mapping found for gate type '{type(gate)}'")
@@ -67,44 +69,55 @@ class CircuitFeatureSurrogate(ISurrogate):
     max_epochs: int
     patience: int
     delta: float
+    validation_split: float
 
-    def __init__(self, qubit_num: int, max_epochs: int = 200, patience: int = 5, delta: float = 1e-5):
+    def __init__(self, qubit_num: int, max_epochs: int = 200, patience: int = 5, delta: float = 1e-5, validation_split: float = 0.2):
         self.model = Model(qubit_num=qubit_num)
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
+        self.validation_split = validation_split
 
     def train(self, circuits: List[Circuit]) -> None:
         X = torch.Tensor([
             extract_gate_frequencies(circuit) for circuit in circuits
         ])
-        y_true = torch.Tensor([
+        y = torch.Tensor([
             [circuit.fitness] for circuit in circuits
         ])
+
+        X_train = X[:int(len(X) * self.validation_split)]
+        X_val = X[int(len(X) * self.validation_split):]
+        y_train = y[:int(len(X) * self.validation_split)]
+        y_val = y[int(len(X) * self.validation_split):]
 
         criterion = torch.nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters())
 
-        last_loss = np.inf
+        last_val_loss = np.inf
         epochs_without_improvement = 0
 
         for epoch in range(self.max_epochs):
 
             optimizer.zero_grad()
 
-            y_pred = self.model(X)
+            y_pred = self.model(X_train)
 
-            loss = criterion(y_pred, y_true)
+            loss = criterion(y_pred, y_train)
 
             loss.backward()
             optimizer.step()
 
-            if last_loss - loss <= self.delta:
+            with torch.no_grad():
+                y_val_pred = self.model(X_val)
+                val_loss = criterion(y_val_pred, y_val)
+
+            if last_val_loss - val_loss <= self.delta:
                 epochs_without_improvement += 1
             else:
                 epochs_without_improvement = 0
 
-            last_loss = loss
+            last_val_loss = val_loss
 
             if self.patience is not None and epochs_without_improvement >= self.patience:
                 break
