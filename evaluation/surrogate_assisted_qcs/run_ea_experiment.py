@@ -10,8 +10,8 @@ from uuid import uuid4
 
 from src.sas.ea import EvolutionaryAlgorithm, EAParams
 from src.sas.utils import random_circuit, simulate_unitary
-from src.sas.surrogates import ISurrogate, GateFrequencySurrogate, \
-    GATE_FREQUENCY_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
+from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
+    CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
     RANDOM_FITNESS_SURROGATE
 
@@ -25,7 +25,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     type=click.STRING,
     default=None,
     help=("The surrogate model to be used. Default is None. "
-          f"Allowed: None, '{GATE_FREQUENCY_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
+          f"Allowed: None, '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
           f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}'."
           )
 )
@@ -84,8 +84,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
 
     if model is None:
         surrogate = None
-    elif model == GATE_FREQUENCY_SURROGATE:
-        surrogate: ISurrogate = GateFrequencySurrogate(qubit_num)
+    elif model == CIRCUIT_FEATURE_SURROGATE:
+        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:

@@ -9,7 +9,7 @@ from typing import List, Tuple, Dict
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
 
-GATE_FREQUENCY_SURROGATE = "gate_frequency"
+CIRCUIT_FEATURE_SURROGATE = "gate_frequency"
 
 
 class Model(nn.Module):
@@ -56,8 +56,8 @@ def extract_gate_frequencies(circuit: Circuit) -> List:
     return gate_frequencies
 
 
-class GateFrequencySurrogate(ISurrogate):
-    type = GATE_FREQUENCY_SURROGATE
+class CircuitFeatureSurrogate(ISurrogate):
+    type = CIRCUIT_FEATURE_SURROGATE
 
     model: Model
     max_epochs: int
