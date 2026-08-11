@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 import numpy as np
-from random import sample, randint, choices
+from random import sample, randint, choices, choice
 from scipy.stats import spearmanr
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, \
     mean_squared_error
@@ -163,16 +163,30 @@ class EvolutionaryAlgorithm():
         selected_circuits = sorted_circuits[:count]
         return selected_circuits
 
-    def mutate(self, circuits: List[Circuit], count: int) -> List[Circuit]:
-        selected_parents = choices(circuits, k=count)
+    def mutate(self, circuits: List[Circuit], count: int, max_tries: int = 100_000) -> List[Circuit]:
+        encountered_circuits = set()
+        for circuit in circuits:
+            encountered_circuits.add(circuit)
 
         offspring = []
-        for circuit in selected_parents:
-            child = circuit.copy()
+
+        for _ in range(max_tries):
+            parent = choice(circuits)
+            child = parent.copy()
 
             gate_i = randint(0, len(child.gates) - 1)
             child.gates[gate_i] = random_gate(child.qubit_num)
 
-            offspring.append(child)
+            if child not in encountered_circuits:
+                offspring.append(child)
+                encountered_circuits.add(child)
+
+            if len(offspring) == count:
+                break
+
+        else:
+            print(
+                f"Could not create {count} unique circuits within {max_tries} tries.")
+            print(f"Returning {len(offspring)} children instead.")
 
         return offspring

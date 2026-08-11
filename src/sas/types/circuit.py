@@ -25,3 +25,10 @@ class Circuit():
 
     def __repr__(self) -> str:
         return "[" + ", ".join([str(g) for g in self.gates]) + "]"
+
+    def __hash__(self):
+        gates = ";".join([str(gate) for gate in self.gates])
+        return hash(gates)
+
+    def __eq__(self, value: "Circuit") -> bool:
+        return self.__hash__() == value.__hash__()
