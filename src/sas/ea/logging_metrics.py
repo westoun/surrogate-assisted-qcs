@@ -5,6 +5,7 @@ from random import sample, randint, choices, choice
 from scipy.stats import spearmanr
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, \
     mean_squared_error
+from statistics import mean, median, stdev
 from typing import Any, List, Tuple
 import warnings
 
@@ -37,3 +38,14 @@ def evaluate_surrogate(predicted_fitness_scores: List[float], actual_fitness_sco
             predicted_fitness_scores, actual_fitness_scores).statistic
 
     return fitness_mse, rank_correlation
+
+
+def extract_fitness_statistics(population: List[Circuit]) -> Tuple[float, float, float, float]:
+    """Returns the minimum, median, mean, and std of the 
+    fitness scores in the population."""
+
+    fitness_scores = [
+        circuit.fitness for circuit in population
+    ]
+
+    return min(fitness_scores), median(fitness_scores), mean(fitness_scores), stdev(fitness_scores)

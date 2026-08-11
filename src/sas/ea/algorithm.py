@@ -16,7 +16,7 @@ from src.sas.surrogates import ISurrogate
 
 from .params import EAParams
 from .logging_ import log_epoch_results
-from .logging_metrics import evaluate_surrogate
+from .logging_metrics import evaluate_surrogate, extract_fitness_statistics
 
 
 class EvolutionaryAlgorithm():
@@ -46,8 +46,14 @@ class EvolutionaryAlgorithm():
                 if self.surrogate is not None:
                     self.surrogate.train(population)
 
+        fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
+            population)
         log_epoch_results(
-            generation=0, population=population,
+            generation=0,
+            fitness_min=fitness_min,
+            fitness_median=fitness_median,
+            fitness_mean=fitness_mean,
+            fitness_stdev=fitness_stdev,
             ea_duration=time_recorder["ea"].duration,
             eval_duration=time_recorder["eval"].duration,
             train_duration=time_recorder["train"].duration,
@@ -110,8 +116,14 @@ class EvolutionaryAlgorithm():
                     if self.surrogate is not None:
                         self.surrogate.train(population)
 
+            fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
+                population)
             log_epoch_results(
-                generation=generation, population=population,
+                generation=generation,
+                fitness_min=fitness_min,
+                fitness_median=fitness_median,
+                fitness_mean=fitness_mean,
+                fitness_stdev=fitness_stdev,
                 ea_duration=time_recorder["ea"].duration,
                 eval_duration=time_recorder["eval"].duration,
                 train_duration=time_recorder["train"].duration,
@@ -120,8 +132,7 @@ class EvolutionaryAlgorithm():
                 eval_memory=memory_recorder["eval"].peak,
                 train_memory=memory_recorder["train"].peak,
                 pred_memory=memory_recorder["pred"].peak,
-                fitness_mse=fitness_mse,
-                rank_correlation=rank_correlation,
+                fitness_mse=fitness_mse, rank_correlation=rank_correlation,
                 params=self.params)
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:
