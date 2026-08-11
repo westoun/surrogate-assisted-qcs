@@ -16,7 +16,8 @@ from src.sas.surrogates import ISurrogate
 
 from .params import EAParams
 from .logging_ import log_epoch_results
-from .logging_metrics import evaluate_surrogate, extract_fitness_statistics
+from .logging_metrics import evaluate_surrogate, extract_fitness_statistics, \
+    compute_survival_rate
 
 
 class EvolutionaryAlgorithm():
@@ -63,8 +64,12 @@ class EvolutionaryAlgorithm():
             train_memory=memory_recorder["train"].peak,
             pred_memory=memory_recorder["pred"].peak,
             fitness_mse=None, rank_correlation=None,
+            survival_rate=None,
             params=self.params)
 
+        # Init variable outside of loop to ensure it is available
+        # for survival rate computation.
+        offspring = None
         for generation in range(1, self.params.max_generations + 1):
 
             if self.surrogate is None:
@@ -73,6 +78,9 @@ class EvolutionaryAlgorithm():
                     with time_recorder["ea"]:
                         parents = self.select(
                             population, count=self.params.parent_count)
+                        survival_rate = compute_survival_rate(
+                            new_parents=parents, prev_offspring=offspring)
+                        
                         offspring = self.mutate(
                             parents, count=self.params.offspring_count)
 
@@ -82,6 +90,9 @@ class EvolutionaryAlgorithm():
                     with time_recorder["ea"]:
                         parents = self.select(
                             population, count=self.params.parent_count)
+                        survival_rate = compute_survival_rate(
+                            new_parents=parents, prev_offspring=offspring)
+
                         offspring = self.mutate(
                             parents, count=self.params.offspring_count * 3)
 
@@ -133,6 +144,7 @@ class EvolutionaryAlgorithm():
                 train_memory=memory_recorder["train"].peak,
                 pred_memory=memory_recorder["pred"].peak,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
+                survival_rate=survival_rate,
                 params=self.params)
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:

@@ -19,6 +19,16 @@ from .params import EAParams
 from .logging_ import log_epoch_results
 
 
+def compute_survival_rate(new_parents: List[Circuit], prev_offspring: List[Circuit]) -> float:
+    if prev_offspring is None:
+        return None
+
+    surviving_offspring = [
+        circuit for circuit in prev_offspring if circuit in new_parents
+    ]
+    return len(surviving_offspring) / len(prev_offspring)
+
+
 def evaluate_surrogate(predicted_fitness_scores: List[float], actual_fitness_scores: List[float]) -> Tuple[float, float]:
     """Returns fitness mse and rank correlation"""
 
