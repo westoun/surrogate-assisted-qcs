@@ -140,5 +140,6 @@ class CircuitFeatureSurrogate(ISurrogate):
             "type": self.type,
             "max_epochs": self.max_epochs,
             "patience": self.patience,
-            "delta": self.delta
+            "delta": self.delta,
+            "validation_split": self.validation_split
         }
