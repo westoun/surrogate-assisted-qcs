@@ -16,6 +16,7 @@ from src.sas.surrogates import ISurrogate
 
 from .params import EAParams
 from .logging_ import log_epoch_results
+from .logging_metrics import evaluate_surrogate
 
 
 class EvolutionaryAlgorithm():
@@ -99,7 +100,7 @@ class EvolutionaryAlgorithm():
                 circuit.fitness for circuit in offspring
             ]
 
-            fitness_mse, rank_correlation = self.evaluate_surrogate(
+            fitness_mse, rank_correlation = evaluate_surrogate(
                 predicted_fitness_scores, actual_fitness_scores)
 
             population = parents + offspring
@@ -122,24 +123,6 @@ class EvolutionaryAlgorithm():
                 fitness_mse=fitness_mse,
                 rank_correlation=rank_correlation,
                 params=self.params)
-
-    def evaluate_surrogate(self, predicted_fitness_scores: List[float], actual_fitness_scores: List[float]) -> Tuple[float, float]:
-        # Case: no surrogate was used, so no fitness scores have
-        # been computed prior to explicit evaluation.
-        if None in predicted_fitness_scores:
-            return 0.0, 1.0
-
-        fitness_mse = mean_squared_error(
-            predicted_fitness_scores, actual_fitness_scores)
-
-        # Spearmanr is not defined if one of the input arrays has
-        # a stdev of 0. In that case, returns nan.
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore')
-            rank_correlation = spearmanr(
-                predicted_fitness_scores, actual_fitness_scores).statistic
-
-        return fitness_mse, rank_correlation
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:
         encountered_circuits = set()
