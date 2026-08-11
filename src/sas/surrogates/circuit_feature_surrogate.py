@@ -13,25 +13,31 @@ CIRCUIT_FEATURE_SURROGATE = "gate_frequency"
 
 
 class Model(nn.Module):
-    def __init__(self, qubit_num: int):
+    def __init__(self, qubit_num: int, neuron_counts: List[int]):
         super().__init__()
 
         feature_count = 4 + 4 * qubit_num
 
-        # TODO: Play around with layer and neuron count.
-        self.linear1 = nn.Linear(in_features=feature_count, out_features=128)
-        self.linear2 = nn.Linear(128, 64)
-        self.linear3 = nn.Linear(64, 32)
-        self.linear4 = nn.Linear(32, 1)
+        layers = [
+            nn.Linear(feature_count, neuron_counts[0])
+        ]
+        for neuron_count in neuron_counts[1:]:
+            layers.append(
+                nn.Linear(neuron_count, neuron_count)
+            )
+        layers.append(
+            nn.Linear(neuron_counts[-1], 1)
+        )
+
+        self.layers = nn.ModuleList(layers)
 
     def forward(self, x):
-        x = self.linear1(x)
-        x = nn.functional.relu(x)
-        x = self.linear2(x)
-        x = nn.functional.relu(x)
-        x = self.linear3(x)
-        x = nn.functional.relu(x)
-        x = self.linear4(x)
+
+        for layer in self.layers[:-1]:
+            x = layer(x)
+            x = nn.functional.relu(x)
+
+        x = self.layers[-1](x)
         return x
 
 
@@ -70,9 +76,17 @@ class CircuitFeatureSurrogate(ISurrogate):
     patience: int
     delta: float
     validation_split: float
+    neuron_counts: List[int]
 
-    def __init__(self, qubit_num: int, max_epochs: int = 200, patience: int = 5, delta: float = 1e-5, validation_split: float = 0.2):
-        self.model = Model(qubit_num=qubit_num)
+    def __init__(self, qubit_num: int,
+                 neuron_counts: List[int],
+                 max_epochs: int = 200,
+                 patience: int = 5,
+                 delta: float = 1e-5,
+                 validation_split: float = 0.2):
+        self.model = Model(qubit_num=qubit_num, neuron_counts=neuron_counts)
+
+        self.neuron_counts = neuron_counts
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
@@ -141,5 +155,6 @@ class CircuitFeatureSurrogate(ISurrogate):
             "max_epochs": self.max_epochs,
             "patience": self.patience,
             "delta": self.delta,
-            "validation_split": self.validation_split
+            "validation_split": self.validation_split,
+            "neuron_counts": self.neuron_counts
         }
