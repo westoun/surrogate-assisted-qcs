@@ -16,7 +16,7 @@ class Model(nn.Module):
     def __init__(self, qubit_num: int):
         super().__init__()
 
-        feature_count = 4 * qubit_num
+        feature_count = 4 + 4 * qubit_num
 
         # TODO: Play around with layer and neuron count.
         self.linear1 = nn.Linear(in_features=feature_count, out_features=128)
@@ -37,18 +37,22 @@ class Model(nn.Module):
 
 def extract_gate_frequencies(circuit: Circuit) -> List:
     gate_frequencies = np.zeros(
-        shape=(4 * circuit.qubit_num, ), dtype=float).tolist()
+        shape=(4 + 4 * circuit.qubit_num, ), dtype=float).tolist()
 
     for gate in circuit.gates:
         if type(gate) == H:
-            gate_frequencies[4 * gate.target + 0] += 1 / len(circuit.gates)
+            gate_frequencies[0] += 1 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.target + 0] += 1 / len(circuit.gates)
         elif type(gate) == S:
-            gate_frequencies[4 * gate.target + 1] += 1 / len(circuit.gates)
+            gate_frequencies[1] += 1 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.target + 1] += 1 / len(circuit.gates)
         elif type(gate) == T:
-            gate_frequencies[4 * gate.target + 2] += 1 / len(circuit.gates)
+            gate_frequencies[2] += 1 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.target + 2] += 1 / len(circuit.gates)
         elif type(gate) == CX:
-            gate_frequencies[4 * gate.control + 3] += 0.5 / len(circuit.gates)
-            gate_frequencies[4 * gate.target + 3] += 0.5 / len(circuit.gates)
+            gate_frequencies[3] += 1 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.control + 3] += 0.5 / len(circuit.gates)
+            gate_frequencies[4 + 4 * gate.target + 3] += 0.5 / len(circuit.gates)
         else:
             raise NotImplementedError(
                 f"No mapping found for gate type '{type(gate)}'")
