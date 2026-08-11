@@ -141,11 +141,26 @@ class EvolutionaryAlgorithm():
 
         return fitness_mse, rank_correlation
 
-    def init_population(self, count: int) -> List[Circuit]:
-        population = [
-            random_circuit(self.params.qubit_num, self.params.gate_count)
-            for _ in range(count)
-        ]
+    def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:
+        encountered_circuits = set()
+
+        population = []
+
+        for _ in range(max_tries):
+            circuit = random_circuit(
+                self.params.qubit_num, self.params.gate_count)
+
+            if circuit not in encountered_circuits:
+                population.append(circuit)
+                encountered_circuits.add(circuit)
+
+            if len(population) == count:
+                break
+        else:
+            print(
+                f"Could not create {count} unique circuits within {max_tries} tries.")
+            print(f"Returning {len(population)} circuits instead.")
+
         return population
 
     def evaluate(self, circuits: List[Circuit]) -> None:
