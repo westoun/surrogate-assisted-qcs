@@ -16,7 +16,7 @@ def log_model_performance(
         mse_score: float,
         rank_correlation: float
 ) -> None:
-    target_path = "results.csv"
+    target_path = "results/architecture_search.csv"
 
     add_header = not os.path.exists(target_path)
 

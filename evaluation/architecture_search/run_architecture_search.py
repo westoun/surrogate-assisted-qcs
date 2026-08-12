@@ -58,8 +58,8 @@ def generate_data(qubit_num: int, gate_count: int, count: int) -> List[Circuit]:
 
 
 if __name__ == "__main__":
-    seed_num: int = 15
-    seed_offset: int = 50 + 15
+    seed_num: int = 30
+    seed_offset: int = 50
 
     circuit_count = 1000
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
         (6, 20)
     ]
 
-    layer_counts = [1, 2, 3, 4]
-    neuron_counts = [16, 32, 64, 128]
+    layer_counts = [1, 2, 3, 4, 5]
+    neuron_counts = [16, 32, 64, 128, 256]
 
     for seed_i in tqdm(range(seed_num)):
         seed = seed_i + seed_offset
