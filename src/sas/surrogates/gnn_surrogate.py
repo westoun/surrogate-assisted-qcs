@@ -61,22 +61,31 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
 
 class Model(nn.Module):
-    def __init__(self):
+    def __init__(self, channel_counts: List[int]):
         super().__init__()
 
-        self.layer1 = GCNConv(3, 32)
-        self.layer2 = GCNConv(32, 32)
-        self.layer3 = nn.Linear(32, 1)
+        layers = [
+            GCNConv(3, channel_counts[0])
+        ]
+        for i, channel_count in enumerate(channel_counts[1:]):
+            layers.append(
+                GCNConv(
+                    channel_counts[i-1], channel_count
+                )
+            )
+
+        layers.append(nn.Linear(channel_counts[-1], 1))
+        self.layers = nn.ModuleList(layers)
 
     def forward(self, data: Data):
         x, edge_index = data.x, data.edge_index
 
-        x = self.layer1(x, edge_index)
-        x = nn.functional.relu(x)
-        x = self.layer2(x, edge_index)
-        x = nn.functional.relu(x)
+        for layer in self.layers[:-1]:
+            x = layer(x, edge_index)
+            x = nn.functional.relu(x)
+
         x = global_mean_pool(x, data.batch)
-        x = self.layer3(x)
+        x = self.layers[-1](x)
         return x
 
 
@@ -88,14 +97,17 @@ class GNNSurrogate(ISurrogate):
     patience: int
     delta: float
     validation_split: float
+    channel_counts: List[int]
 
     def __init__(self,
+                 channel_counts: List[int],
                  max_epochs: int = 200,
                  patience: int = 5,
                  delta: float = 1e-5,
                  validation_split: float = 0.2):
-        self.model = Model()
+        self.model = Model(channel_counts)
 
+        self.channel_counts = channel_counts
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
@@ -172,4 +184,5 @@ class GNNSurrogate(ISurrogate):
             "patience": self.patience,
             "delta": self.delta,
             "validation_split": self.validation_split,
+            "channel_counts": self.channel_counts
         }

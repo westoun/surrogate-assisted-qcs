@@ -21,9 +21,9 @@ class Model(nn.Module):
         layers = [
             nn.Linear(feature_count, neuron_counts[0])
         ]
-        for neuron_count in neuron_counts[1:]:
+        for i, neuron_count in enumerate(neuron_counts[1:]):
             layers.append(
-                nn.Linear(neuron_count, neuron_count)
+                nn.Linear(neuron_counts[i - 1], neuron_count)
             )
         layers.append(
             nn.Linear(neuron_counts[-1], 1)
