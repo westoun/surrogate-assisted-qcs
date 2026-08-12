@@ -93,7 +93,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     elif model == RANDOM_FITNESS_SURROGATE:
         surrogate: ISurrogate = RandomFitnessSurrogate()
     elif model == GNN_SURROGATE:
-        surrogate: ISurrogate = GNNSurrogate()
+        surrogate: ISurrogate = GNNSurrogate(channel_counts=[128, 128])
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
