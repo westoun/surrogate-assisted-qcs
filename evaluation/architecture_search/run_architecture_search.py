@@ -17,7 +17,8 @@ from src.sas.utils import random_circuit, simulate_unitary, unitary_distance, \
     MultiMemoryRecorder, MultiTimeRecorder
 
 from src.sas.types import Circuit
-from src.sas.surrogates import CircuitFeatureSurrogate
+from src.sas.surrogates import CircuitFeatureSurrogate, CIRCUIT_FEATURE_SURROGATE, \
+    GNNSurrogate, GNN_SURROGATE
 from logging_ import log_model_performance
 
 
@@ -60,8 +61,8 @@ def generate_data(qubit_num: int, gate_count: int, count: int) -> List[Circuit]:
 
 
 if __name__ == "__main__":
-    seed_num: int = 30
-    seed_offset: int = 50
+    seed_num: int = 15
+    seed_offset: int = 50 + 15
 
     circuit_count = 1000
 
@@ -72,7 +73,6 @@ if __name__ == "__main__":
     ]
 
     layer_counts = [1, 2, 3, 4, 5]
-    neuron_counts = [16, 32, 64, 128, 256, 512, 1024]
 
     time_recorder = MultiTimeRecorder()
     memory_recorder = MultiMemoryRecorder()
@@ -98,38 +98,60 @@ if __name__ == "__main__":
             y_train, y_test = fitness_scores[:math.floor(
                 0.7 * len(fitness_scores))], fitness_scores[math.floor(0.7 * len(fitness_scores)):]
 
-            for layer_count in layer_counts:
-                for neuron_count in neuron_counts:
+            for model in [CIRCUIT_FEATURE_SURROGATE, GNN_SURROGATE]:
 
-                    surrogate = CircuitFeatureSurrogate(
-                        qubit_num=qubit_num,
-                        neuron_counts=[
-                            neuron_count for _ in range(layer_count)
-                        ],
-                        max_epochs=10_000
-                    )
+                if model == GNN_SURROGATE:
+                    element_counts = [8, 16, 32, 64, 128, 256]
+                elif model == CIRCUIT_FEATURE_SURROGATE:
+                    element_counts = [16, 32, 64, 128, 256, 512, 1024]
+                else:
+                    raise NotImplementedError(
+                        f"No implementation provided for model type '{model}'")
 
-                    with memory_recorder["train"]:
-                        with time_recorder["train"]:
-                            surrogate.train(X_train)
+                for layer_count in layer_counts:
+                    for element_count in element_counts:
 
-                    with memory_recorder["inference"]:
-                        with time_recorder["inference"]:
-                            y_pred = surrogate.predict(X_test)
+                        if model == CIRCUIT_FEATURE_SURROGATE:
+                            surrogate = CircuitFeatureSurrogate(
+                                qubit_num=qubit_num,
+                                neuron_counts=[
+                                    element_count for _ in range(layer_count)
+                                ],
+                                max_epochs=10_000
+                            )
+                        elif model == GNN_SURROGATE:
+                            surrogate = GNNSurrogate(
+                                channel_counts=[
+                                    element_count for _ in range(layer_count)
+                                ],
+                                max_epochs=10_000
+                            )
+                        else:
+                            raise NotImplementedError(
+                                f"No implementation provided for model type '{model}'")
 
-                    mse = mean_squared_error(y_pred, y_test)
-                    rank_correlation = spearmanr(y_pred, y_test).statistic
+                        with memory_recorder["train"]:
+                            with time_recorder["train"]:
+                                surrogate.train(X_train)
 
-                    log_model_performance(
-                        qubit_num=qubit_num,
-                        gate_count=gate_count,
-                        layer_count=layer_count,
-                        neuron_count=neuron_count,
-                        seed=seed,
-                        train_time=time_recorder["train"].duration,
-                        inference_time=time_recorder["inference"].duration,
-                        train_memory=memory_recorder["train"].peak,
-                        inference_memory=memory_recorder["inference"].peak,
-                        mse_score=mse,
-                        rank_correlation=rank_correlation
-                    )
+                        with memory_recorder["inference"]:
+                            with time_recorder["inference"]:
+                                y_pred = surrogate.predict(X_test)
+
+                        mse = mean_squared_error(y_pred, y_test)
+                        rank_correlation = spearmanr(y_pred, y_test).statistic
+
+                        log_model_performance(
+                            qubit_num=qubit_num,
+                            gate_count=gate_count,
+                            model=surrogate.type,
+                            layer_count=layer_count,
+                            elements_per_layer=element_count,
+                            seed=seed,
+                            train_time=time_recorder["train"].duration,
+                            inference_time=time_recorder["inference"].duration,
+                            train_memory=memory_recorder["train"].peak,
+                            inference_memory=memory_recorder["inference"].peak,
+                            mse_score=mse,
+                            rank_correlation=rank_correlation
+                        )

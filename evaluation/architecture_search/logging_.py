@@ -10,8 +10,9 @@ from src.sas.utils.time import get_timestamp
 def log_model_performance(
         qubit_num: int,
         gate_count: int,
+        model: str,
         layer_count: int,
-        neuron_count: int,
+        elements_per_layer: int,
         seed: int,
         train_time: float,
         inference_time: float,
@@ -27,10 +28,10 @@ def log_model_performance(
     with open(target_path, "a") as target_file:
 
         if add_header:
-            header = "qubit_num; gate_count; layer_count; neuron_count; seed; "
+            header = "qubit_num; gate_count; model; layer_count; elements_per_layer; seed; "
             header += "train_time; inference_time; train_memory; inference_memory; mse_score; rank_correlation"
             target_file.write(header + "\n")
 
-        line = f"{qubit_num}; {gate_count}; {layer_count}; {neuron_count}; {seed}; "
+        line = f"{qubit_num}; {gate_count};{model}; {layer_count}; {elements_per_layer}; {seed}; "
         line += f"{train_time}; {inference_time}; {train_memory}; {inference_memory}; {mse_score}; {rank_correlation}"
         target_file.write(line + "\n")
