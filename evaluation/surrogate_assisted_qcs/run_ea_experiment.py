@@ -13,7 +13,7 @@ from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
-    RANDOM_FITNESS_SURROGATE
+    RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE
 
 from logging_ import log_experiment_details, log_end_timestamp
 
@@ -26,7 +26,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     default=None,
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
-          f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}'."
+          f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}'."
           )
 )
 @click.option(
@@ -60,7 +60,7 @@ from logging_ import log_experiment_details, log_end_timestamp
 def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    max_generations = 1000
+    max_generations = 500
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s_{str(uuid4())}"
 
     if seed is not None:
@@ -85,13 +85,15 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     if model is None:
         surrogate = None
     elif model == CIRCUIT_FEATURE_SURROGATE:
-        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num)
+        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512])
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
-        surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=100)
+        surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=1000)
     elif model == RANDOM_FITNESS_SURROGATE:
         surrogate: ISurrogate = RandomFitnessSurrogate()
+    elif model == GNN_SURROGATE:
+        surrogate: ISurrogate = GNNSurrogate()
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
