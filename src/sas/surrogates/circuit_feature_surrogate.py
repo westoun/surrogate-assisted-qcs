@@ -32,7 +32,6 @@ class Model(nn.Module):
         self.layers = nn.ModuleList(layers)
 
     def forward(self, x):
-
         for layer in self.layers[:-1]:
             x = layer(x)
             x = nn.functional.relu(x)
@@ -100,10 +99,10 @@ class CircuitFeatureSurrogate(ISurrogate):
             [circuit.fitness] for circuit in circuits
         ])
 
-        X_train = X[:int(len(X) * self.validation_split)]
-        X_val = X[int(len(X) * self.validation_split):]
-        y_train = y[:int(len(X) * self.validation_split)]
-        y_val = y[int(len(X) * self.validation_split):]
+        X_train = X[:int(len(X) * (1 - self.validation_split))]
+        X_val = X[int(len(X) * (1 - self.validation_split)):]
+        y_train = y[:int(len(X) * (1 - self.validation_split))]
+        y_val = y[int(len(X) * (1 - self.validation_split)):]
 
         criterion = torch.nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters())
