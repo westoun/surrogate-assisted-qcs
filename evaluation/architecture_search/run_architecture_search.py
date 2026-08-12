@@ -13,7 +13,9 @@ import torch
 from tqdm import tqdm
 from typing import List
 
-from src.sas.utils import random_circuit, simulate_unitary, unitary_distance
+from src.sas.utils import random_circuit, simulate_unitary, unitary_distance, \
+    MultiMemoryRecorder, MultiTimeRecorder
+
 from src.sas.types import Circuit
 from src.sas.surrogates import CircuitFeatureSurrogate
 from logging_ import log_model_performance
@@ -70,7 +72,10 @@ if __name__ == "__main__":
     ]
 
     layer_counts = [1, 2, 3, 4, 5]
-    neuron_counts = [16, 32, 64, 128, 256]
+    neuron_counts = [16, 32, 64, 128, 256, 512, 1024]
+
+    time_recorder = MultiTimeRecorder()
+    memory_recorder = MultiMemoryRecorder()
 
     for seed_i in tqdm(range(seed_num)):
         seed = seed_i + seed_offset
@@ -103,9 +108,14 @@ if __name__ == "__main__":
                         ],
                         max_epochs=10_000
                     )
-                    surrogate.train(X_train)
 
-                    y_pred = surrogate.predict(X_test)
+                    with memory_recorder["train"]:
+                        with time_recorder["train"]:
+                            surrogate.train(X_train)
+
+                    with memory_recorder["inference"]:
+                        with time_recorder["inference"]:
+                            y_pred = surrogate.predict(X_test)
 
                     mse = mean_squared_error(y_pred, y_test)
                     rank_correlation = spearmanr(y_pred, y_test).statistic
@@ -116,6 +126,10 @@ if __name__ == "__main__":
                         layer_count=layer_count,
                         neuron_count=neuron_count,
                         seed=seed,
+                        train_time=time_recorder["train"].duration,
+                        inference_time=time_recorder["inference"].duration,
+                        train_memory=memory_recorder["train"].peak,
+                        inference_memory=memory_recorder["inference"].peak,
                         mse_score=mse,
                         rank_correlation=rank_correlation
                     )
