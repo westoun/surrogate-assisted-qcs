@@ -22,16 +22,17 @@ class RandomBaseStateSurrogate(ISurrogate):
         pass  # Do nothing.
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
+        if len(circuits) == 0:
+            return []
+
+        base_state = randint(0, 2 ** circuits[0].qubit_num - 1)
+        target_vector = self.target.T[base_state]
 
         fitness_scores = []
 
         for circuit in circuits:
-
-            base_state = randint(0, 2 ** circuit.qubit_num - 1)
-
             state_vector = simulate_state_vector(
                 circuit, base_state=base_state)
-            target_vector = self.target.T[base_state]
 
             distance = vector_distance(state_vector, target_vector)
             fitness_scores.append(distance)
