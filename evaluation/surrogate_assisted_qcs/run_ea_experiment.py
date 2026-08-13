@@ -25,7 +25,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     type=click.STRING,
     default=None,
     help=("The surrogate model to be used. Default is None. "
-          f"Allowed: None, '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
+          f"Allowed: None, 'None', '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
           f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}'."
           )
 )
@@ -82,7 +82,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         logging_prefix=logging_prefix
     )
 
-    if model is None:
+    if model is None or model == "None":
         surrogate = None
     elif model == CIRCUIT_FEATURE_SURROGATE:
         surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512])
