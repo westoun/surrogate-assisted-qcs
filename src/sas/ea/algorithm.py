@@ -17,7 +17,7 @@ from src.sas.surrogates import ISurrogate
 from .params import EAParams
 from .logging_ import log_epoch_results
 from .logging_metrics import evaluate_surrogate, extract_fitness_statistics, \
-    compute_survival_rate
+    compute_survival_rate, compute_population_diversity
 
 
 class EvolutionaryAlgorithm():
@@ -49,6 +49,8 @@ class EvolutionaryAlgorithm():
 
         fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
             population)
+        population_diversity = compute_population_diversity(population)
+        
         log_epoch_results(
             generation=0,
             fitness_min=fitness_min,
@@ -65,6 +67,9 @@ class EvolutionaryAlgorithm():
             pred_memory=memory_recorder["pred"].peak,
             fitness_mse=None, rank_correlation=None,
             survival_rate=None,
+            parent_diversity=None,
+            offspring_diversity=None,
+            population_diversity=population_diversity,
             params=self.params)
 
         # Init variable outside of loop to ensure it is available
@@ -78,6 +83,7 @@ class EvolutionaryAlgorithm():
                     with time_recorder["ea"]:
                         parents = self.select(
                             population, count=self.params.parent_count)
+
                         survival_rate = compute_survival_rate(
                             new_parents=parents, prev_offspring=offspring)
                         
@@ -105,6 +111,7 @@ class EvolutionaryAlgorithm():
                         offspring = self.select(
                             offspring, count=self.params.offspring_count)
 
+
             predicted_fitness_scores = [
                 circuit.fitness for circuit in offspring
             ]
@@ -122,6 +129,7 @@ class EvolutionaryAlgorithm():
 
             population = parents + offspring
 
+
             with memory_recorder["train"]:
                 with time_recorder["train"]:
                     if self.surrogate is not None:
@@ -129,6 +137,10 @@ class EvolutionaryAlgorithm():
 
             fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
                 population)
+            parent_diversity = compute_population_diversity(parents)
+            offspring_diversity = compute_population_diversity(offspring)
+            population_diversity = compute_population_diversity(population)
+            
             log_epoch_results(
                 generation=generation,
                 fitness_min=fitness_min,
@@ -145,6 +157,9 @@ class EvolutionaryAlgorithm():
                 pred_memory=memory_recorder["pred"].peak,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
                 survival_rate=survival_rate,
+                parent_diversity=parent_diversity,
+                offspring_diversity=offspring_diversity,
+                population_diversity=population_diversity,
                 params=self.params)
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:
