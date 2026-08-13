@@ -9,7 +9,7 @@ from typing import List, Tuple, Dict
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
 
-CIRCUIT_FEATURE_SURROGATE = "gate_frequency"
+CIRCUIT_FEATURE_SURROGATE = "circuit_feature"
 
 
 class Model(nn.Module):
