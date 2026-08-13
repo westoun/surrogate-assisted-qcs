@@ -16,8 +16,17 @@ def simulate_unitary(circuit: Circuit) -> np.ndarray:
     return unitary
 
 
-def circuit_to_qiskit(circuit: Circuit, add_measurement: bool = False) -> QuantumCircuit:
+def circuit_to_qiskit(circuit: Circuit, add_measurement: bool = False, base_state: int = None) -> QuantumCircuit:
     qiskit_circuit = QuantumCircuit(circuit.qubit_num)
+
+    if base_state is not None:
+        assert base_state < 2 ** circuit.qubit_num
+
+        bit_string = bin(base_state)[2:].zfill(circuit.qubit_num)
+        for bit_i, bit_value in enumerate(bit_string):
+
+            if bit_value == "1":
+                qiskit_circuit.x(bit_i)
 
     for gate in circuit.gates:
         if type(gate) == H:
@@ -38,8 +47,8 @@ def circuit_to_qiskit(circuit: Circuit, add_measurement: bool = False) -> Quantu
     return qiskit_circuit
 
 
-def simulate_state_vector(circuit: Circuit) -> np.ndarray:
-    qiskit_circuit = circuit_to_qiskit(circuit)
+def simulate_state_vector(circuit: Circuit, base_state: int = None) -> np.ndarray:
+    qiskit_circuit = circuit_to_qiskit(circuit, base_state=base_state)
     vector = Statevector.from_circuit(qiskit_circuit)
     return vector
 

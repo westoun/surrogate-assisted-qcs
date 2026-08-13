@@ -13,7 +13,8 @@ from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
-    RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE
+    RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, \
+    RANDOM_BASE_STATE_SURROGATE, RandomBaseStateSurrogate
 
 from logging_ import log_experiment_details, log_end_timestamp
 
@@ -26,7 +27,8 @@ from logging_ import log_experiment_details, log_end_timestamp
     default=None,
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, 'None', '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
-          f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}'."
+          f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}', "
+          f"'{RANDOM_BASE_STATE_SURROGATE}'."
           )
 )
 @click.option(
@@ -88,6 +90,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512])
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
+    elif model == RANDOM_BASE_STATE_SURROGATE:
+        surrogate: ISurrogate = RandomBaseStateSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
         surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=1000)
     elif model == RANDOM_FITNESS_SURROGATE:
