@@ -10,7 +10,7 @@ class EAParams:
     target: np.ndarray
     parent_count: int
     offspring_count: int
-    max_generations: int
+    max_evaluations: int
     evaluate_every: int
     qubit_num: int
     gate_count: int

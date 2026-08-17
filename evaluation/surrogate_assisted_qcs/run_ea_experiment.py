@@ -69,7 +69,7 @@ from logging_ import log_experiment_details, log_end_timestamp
 def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    max_generations = 500
+    max_evaluations = 100_000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s_{str(uuid4())}"
 
     if seed is not None:
@@ -85,7 +85,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         target=target,
         parent_count=parent_count,
         offspring_count=offspring_count,
-        max_generations=max_generations,
+        max_evaluations=max_evaluations,
         qubit_num=qubit_num,
         gate_count=gate_count,
         logging_prefix=logging_prefix,

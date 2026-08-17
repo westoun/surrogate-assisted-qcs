@@ -79,7 +79,9 @@ class EvolutionaryAlgorithm():
         # Init variable outside of loop to ensure it is available
         # for survival rate computation.
         offspring = None
-        for generation in range(1, self.params.max_generations + 1):
+        explicit_evaluations = len(population)
+
+        for generation in range(1, 20_000):  # High number for max generations
 
             with memory_recorder["ea"]:
                 with time_recorder["ea"]:
@@ -94,12 +96,11 @@ class EvolutionaryAlgorithm():
 
             population = parents + offspring
 
-            explicit_evaluations = 0
             fitness_mse, rank_correlation = None, None
 
             if self.surrogate is None:
 
-                explicit_evaluations = len(offspring)
+                explicit_evaluations += len(offspring)
 
                 with memory_recorder["eval"]:
                     with time_recorder["eval"]:
@@ -107,7 +108,7 @@ class EvolutionaryAlgorithm():
 
             elif generation % self.params.evaluate_every == 0:
 
-                explicit_evaluations = len([
+                explicit_evaluations += len([
                     circuit for circuit in population if circuit.simulated is not True
                 ])
 
@@ -166,6 +167,9 @@ class EvolutionaryAlgorithm():
                 population_diversity=population_diversity,
                 explicit_evaluations=explicit_evaluations,
                 params=self.params)
+
+            if explicit_evaluations >= self.params.max_evaluations:
+                break
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:
         encountered_circuits = set()

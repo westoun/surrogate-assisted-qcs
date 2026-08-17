@@ -23,7 +23,7 @@ def log_experiment_details(
             "ea": {
                 "parent_count": ea_params.parent_count,
                 "offspring_count": ea_params.offspring_count,
-                "max_generations": ea_params.max_generations,
+                "max_evaluations": ea_params.max_evaluations,
                 "qubit_num": ea_params.qubit_num,
                 "gate_count": ea_params.gate_count,
                 "evaluate_every": ea_params.evaluate_every
