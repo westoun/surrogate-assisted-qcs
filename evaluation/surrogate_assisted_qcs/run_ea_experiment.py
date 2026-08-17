@@ -81,7 +81,8 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         max_generations=max_generations,
         qubit_num=qubit_num,
         gate_count=gate_count,
-        logging_prefix=logging_prefix
+        logging_prefix=logging_prefix,
+        evaluate_every=5
     )
 
     if model is None or model == "None":

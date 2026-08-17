@@ -22,7 +22,6 @@ class TimeRecorder():
 
     def __exit__(self, exc_type, exc, tb):
         self._duration += (datetime.now() - self._start).total_seconds()
-        self._start = None
 
     @property
     def duration(self) -> float:

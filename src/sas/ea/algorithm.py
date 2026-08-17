@@ -49,10 +49,13 @@ class EvolutionaryAlgorithm():
 
         fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
             population)
+        true_fitness_min = fitness_min
+
         population_diversity = compute_population_diversity(population)
-        
+
         log_epoch_results(
             generation=0,
+            true_fitness_min=true_fitness_min,
             fitness_min=fitness_min,
             fitness_median=fitness_median,
             fitness_mean=fitness_mean,
@@ -70,6 +73,7 @@ class EvolutionaryAlgorithm():
             parent_diversity=None,
             offspring_diversity=None,
             population_diversity=population_diversity,
+            explicit_evaluations=len(population),
             params=self.params)
 
         # Init variable outside of loop to ensure it is available
@@ -77,72 +81,72 @@ class EvolutionaryAlgorithm():
         offspring = None
         for generation in range(1, self.params.max_generations + 1):
 
+            with memory_recorder["ea"]:
+                with time_recorder["ea"]:
+                    parents = self.select(
+                        population, count=self.params.parent_count)
+
+                    survival_rate = compute_survival_rate(
+                        new_parents=parents, prev_offspring=offspring)
+
+                    offspring = self.mutate(
+                        parents, count=self.params.offspring_count)
+
+            population = parents + offspring
+
+            explicit_evaluations = 0
+            fitness_mse, rank_correlation = None, None
+
             if self.surrogate is None:
 
-                with memory_recorder["ea"]:
-                    with time_recorder["ea"]:
-                        parents = self.select(
-                            population, count=self.params.parent_count)
+                explicit_evaluations = len(offspring)
 
-                        survival_rate = compute_survival_rate(
-                            new_parents=parents, prev_offspring=offspring)
-                        
-                        offspring = self.mutate(
-                            parents, count=self.params.offspring_count)
+                with memory_recorder["eval"]:
+                    with time_recorder["eval"]:
+                        self.evaluate(offspring)
+
+            elif generation % self.params.evaluate_every == 0:
+
+                explicit_evaluations = len([
+                    circuit for circuit in population if circuit.simulated is not True
+                ])
+
+                pred_fitness_scores = self.surrogate.predict(population)
+
+                with memory_recorder["eval"]:
+                    with time_recorder["eval"]:
+                        self.evaluate(population)
+
+                true_fitness_scores = [
+                    circuit.fitness for circuit in population
+                ]
+
+                fitness_mse, rank_correlation = evaluate_surrogate(
+                    pred_fitness_scores, true_fitness_scores)
+
+                with memory_recorder["train"]:
+                    with time_recorder["train"]:
+                        self.surrogate.train(population)
 
             else:
-
-                with memory_recorder["ea"]:
-                    with time_recorder["ea"]:
-                        parents = self.select(
-                            population, count=self.params.parent_count)
-                        survival_rate = compute_survival_rate(
-                            new_parents=parents, prev_offspring=offspring)
-
-                        offspring = self.mutate(
-                            parents, count=self.params.offspring_count * 3)
 
                 with memory_recorder["pred"]:
                     with time_recorder["pred"]:
                         self.surrogate.evaluate(offspring)
 
-                with memory_recorder["ea"]:
-                    with time_recorder["ea"]:
-                        offspring = self.select(
-                            offspring, count=self.params.offspring_count)
-
-
-            predicted_fitness_scores = [
-                circuit.fitness for circuit in offspring
-            ]
-
-            with memory_recorder["eval"]:
-                with time_recorder["eval"]:
-                    self.evaluate(offspring)
-
-            actual_fitness_scores = [
-                circuit.fitness for circuit in offspring
-            ]
-
-            fitness_mse, rank_correlation = evaluate_surrogate(
-                predicted_fitness_scores, actual_fitness_scores)
-
-            population = parents + offspring
-
-
-            with memory_recorder["train"]:
-                with time_recorder["train"]:
-                    if self.surrogate is not None:
-                        self.surrogate.train(population)
-
             fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
                 population)
+
+            if self.surrogate is None or generation % self.params.evaluate_every == 0:
+                true_fitness_min = min(true_fitness_min, fitness_min)
+
             parent_diversity = compute_population_diversity(parents)
             offspring_diversity = compute_population_diversity(offspring)
             population_diversity = compute_population_diversity(population)
-            
+
             log_epoch_results(
                 generation=generation,
+                true_fitness_min=true_fitness_min,
                 fitness_min=fitness_min,
                 fitness_median=fitness_median,
                 fitness_mean=fitness_mean,
@@ -160,6 +164,7 @@ class EvolutionaryAlgorithm():
                 parent_diversity=parent_diversity,
                 offspring_diversity=offspring_diversity,
                 population_diversity=population_diversity,
+                explicit_evaluations=explicit_evaluations,
                 params=self.params)
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:

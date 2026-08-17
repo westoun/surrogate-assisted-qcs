@@ -11,6 +11,7 @@ class EAParams:
     parent_count: int
     offspring_count: int
     max_generations: int
+    evaluate_every: int
     qubit_num: int
     gate_count: int
     logging_prefix: str
