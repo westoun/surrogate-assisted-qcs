@@ -95,7 +95,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     if model is None or model == "None":
         surrogate = None
     elif model == CIRCUIT_FEATURE_SURROGATE:
-        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512])
+        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512], max_epochs=10_000)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == RANDOM_BASE_STATE_SURROGATE:
@@ -105,7 +105,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     elif model == RANDOM_FITNESS_SURROGATE:
         surrogate: ISurrogate = RandomFitnessSurrogate()
     elif model == GNN_SURROGATE:
-        surrogate: ISurrogate = GNNSurrogate(channel_counts=[128, 128])
+        surrogate: ISurrogate = GNNSurrogate(channel_counts=[128, 128], max_epochs=10_000)
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
