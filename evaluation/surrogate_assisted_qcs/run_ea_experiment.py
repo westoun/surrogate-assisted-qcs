@@ -32,6 +32,13 @@ from logging_ import log_experiment_details, log_end_timestamp
           )
 )
 @click.option(
+    "--evaluate_every",
+    "-ee",
+    type=click.INT,
+    default=5,
+    help="The interval at which explicit evaluation shall take place. Default is 5.",
+)
+@click.option(
     "--qubit-num",
     "-qn",
     type=click.INT,
@@ -59,7 +66,7 @@ from logging_ import log_experiment_details, log_end_timestamp
     default=None,
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
-def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
+def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
     max_generations = 500
@@ -82,7 +89,7 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         qubit_num=qubit_num,
         gate_count=gate_count,
         logging_prefix=logging_prefix,
-        evaluate_every=5
+        evaluate_every=evaluate_every
     )
 
     if model is None or model == "None":
