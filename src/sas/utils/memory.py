@@ -9,29 +9,36 @@ class MemoryRecorder():
     """
 
     _peak: float
+    _baseline: float
 
     def __init__(self):
         if not tracemalloc.is_tracing():
             tracemalloc.start()
 
         self._peak = None
+        self._baseline = None
 
     def __enter__(self):
-        self._peak = 0.0
+        current, peak = tracemalloc.get_traced_memory()
         tracemalloc.reset_peak()
+
+        self._baseline = current
+        self._peak = None
+
 
     def __exit__(self, exc_type, exc, tb):
         current, peak = tracemalloc.get_traced_memory()
 
-        if self._peak is None:
-            self._paek = peak 
-        else:
-            self._peak = max(peak, self._peak)
+        self._peak = peak 
 
     @property
     def peak(self) -> float:
-        tmp = self._peak
+        if self._peak is None:
+            return None
+
+        tmp = self._peak - self._baseline
         self._peak = None
+        self._baseline = 0.0
         return tmp
 
 
