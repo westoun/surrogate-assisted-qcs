@@ -57,11 +57,12 @@ def compute_population_diversity(circuits: List[Circuit]) -> float:
 
     return diversity
 
+
 def _build_gene_value_frequency_dict(circuits: List[Circuit]) -> Dict:
     gene_count = len(circuits[0].gates)
 
     gene_value_frequencies = {}
-    
+
     for gene_i in range(gene_count):
         gene_value_frequencies[gene_i] = {}
 
@@ -77,33 +78,23 @@ def _build_gene_value_frequency_dict(circuits: List[Circuit]) -> Dict:
 
     return gene_value_frequencies
 
-def evaluate_surrogate(predicted_fitness_scores: List[float], actual_fitness_scores: List[float]) -> Tuple[float, float]:
+
+def evaluate_surrogate(true_fitness_scores: List[float], surrogate_fitness_scores: List[float]) -> Tuple[float, float]:
     """Returns fitness mse and rank correlation"""
 
     # Case: no surrogate was used, so no fitness scores have
     # been computed prior to explicit evaluation.
-    if None in predicted_fitness_scores:
+    if None in surrogate_fitness_scores:
         return 0.0, 1.0
 
     fitness_mse = mean_squared_error(
-        predicted_fitness_scores, actual_fitness_scores)
+        true_fitness_scores, surrogate_fitness_scores)
 
     # Spearmanr is not defined if one of the input arrays has
     # a stdev of 0. In that case, returns nan.
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore')
         rank_correlation = spearmanr(
-            predicted_fitness_scores, actual_fitness_scores).statistic
+            true_fitness_scores, surrogate_fitness_scores).statistic
 
     return fitness_mse, rank_correlation
-
-
-def extract_fitness_statistics(population: List[Circuit]) -> Tuple[float, float, float, float]:
-    """Returns the minimum, median, mean, and std of the 
-    fitness scores in the population."""
-
-    fitness_scores = [
-        circuit.fitness for circuit in population
-    ]
-
-    return min(fitness_scores), median(fitness_scores), mean(fitness_scores), stdev(fitness_scores)

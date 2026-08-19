@@ -16,7 +16,7 @@ from src.sas.surrogates import ISurrogate
 
 from .params import EAParams
 from .logging_ import log_epoch_results
-from .logging_metrics import evaluate_surrogate, extract_fitness_statistics, \
+from .logging_metrics import evaluate_surrogate, \
     compute_survival_rate, compute_population_diversity
 
 
@@ -47,19 +47,20 @@ class EvolutionaryAlgorithm():
                 if self.surrogate is not None:
                     self.surrogate.train(population)
 
-        fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
-            population)
-        true_fitness_min = fitness_min
+        with memory_recorder["pred"]:
+            with time_recorder["pred"]:
+                if self.surrogate is not None:
+                    self.surrogate.evaluate(population)
+
+        fitness_min = min([
+            circuit.true_fitness for circuit in population
+        ])
 
         population_diversity = compute_population_diversity(population)
 
         log_epoch_results(
             generation=0,
-            true_fitness_min=true_fitness_min,
             fitness_min=fitness_min,
-            fitness_median=fitness_median,
-            fitness_mean=fitness_mean,
-            fitness_stdev=fitness_stdev,
             ea_duration=time_recorder["ea"].duration,
             eval_duration=time_recorder["eval"].duration,
             train_duration=time_recorder["train"].duration,
@@ -85,8 +86,13 @@ class EvolutionaryAlgorithm():
 
             with memory_recorder["ea"]:
                 with time_recorder["ea"]:
-                    parents = self.select(
-                        population, count=self.params.parent_count)
+
+                    if self.surrogate is None or (generation - 1) % self.params.evaluate_every == 0:
+                        parents = self.select(
+                            population, count=self.params.parent_count, use_surrogate=False)
+                    else:
+                        parents = self.select(
+                            population, count=self.params.parent_count, use_surrogate=True)
 
                     survival_rate = compute_survival_rate(
                         new_parents=parents, prev_offspring=offspring)
@@ -97,7 +103,6 @@ class EvolutionaryAlgorithm():
             population = parents + offspring
 
             fitness_mse, rank_correlation = None, None
-
             if self.surrogate is None:
 
                 explicit_evaluations += len(offspring)
@@ -106,28 +111,46 @@ class EvolutionaryAlgorithm():
                     with time_recorder["eval"]:
                         self.evaluate(offspring)
 
+                fitness_min = min(min([
+                    circuit.true_fitness for circuit in population
+                ]), fitness_min)
+
             elif generation % self.params.evaluate_every == 0:
 
                 explicit_evaluations += len([
-                    circuit for circuit in population if circuit.simulated is not True
+                    circuit for circuit in population if circuit.true_fitness is None
                 ])
-
-                pred_fitness_scores = self.surrogate.predict(population)
 
                 with memory_recorder["eval"]:
                     with time_recorder["eval"]:
                         self.evaluate(population)
 
+                # Do not time log here, as predictions are only used for surrogate
+                # evaluation.
+                surrogate_fitness_scores = self.surrogate.predict(population)
                 true_fitness_scores = [
-                    circuit.fitness for circuit in population
+                    circuit.true_fitness for circuit in population
                 ]
 
+                fitness_min = min(min([
+                    circuit.true_fitness for circuit in population
+                ]), fitness_min)
+
                 fitness_mse, rank_correlation = evaluate_surrogate(
-                    pred_fitness_scores, true_fitness_scores)
+                    true_fitness_scores=true_fitness_scores,
+                    surrogate_fitness_scores=surrogate_fitness_scores
+                )
 
                 with memory_recorder["train"]:
                     with time_recorder["train"]:
                         self.surrogate.train(population)
+
+                # If the model is trainable, than its prediction accuracy is likely to
+                # improve. In that case, the model might choose to reset previous
+                # fitness scores.
+                with memory_recorder["pred"]:
+                    with time_recorder["pred"]:
+                        self.surrogate.evaluate(population)
 
             else:
 
@@ -135,23 +158,13 @@ class EvolutionaryAlgorithm():
                     with time_recorder["pred"]:
                         self.surrogate.evaluate(offspring)
 
-            fitness_min, fitness_median, fitness_mean, fitness_stdev = extract_fitness_statistics(
-                population)
-
-            if self.surrogate is None or generation % self.params.evaluate_every == 0:
-                true_fitness_min = min(true_fitness_min, fitness_min)
-
             parent_diversity = compute_population_diversity(parents)
             offspring_diversity = compute_population_diversity(offspring)
             population_diversity = compute_population_diversity(population)
 
             log_epoch_results(
                 generation=generation,
-                true_fitness_min=true_fitness_min,
                 fitness_min=fitness_min,
-                fitness_median=fitness_median,
-                fitness_mean=fitness_mean,
-                fitness_stdev=fitness_stdev,
                 ea_duration=time_recorder["ea"].duration,
                 eval_duration=time_recorder["eval"].duration,
                 train_duration=time_recorder["train"].duration,
@@ -195,16 +208,21 @@ class EvolutionaryAlgorithm():
 
     def evaluate(self, circuits: List[Circuit]) -> None:
         for circuit in circuits:
-            if circuit.simulated:
+            if circuit.true_fitness is not None:
                 continue
 
             unitary = simulate_unitary(circuit)
             distance = unitary_distance(unitary, self.params.target)
-            circuit.fitness = distance
-            circuit.simulated = True
+            circuit.true_fitness = distance
 
-    def select(self, circuits: List[Circuit], count: int) -> List[Circuit]:
-        sorted_circuits = sorted(circuits, key=lambda circuit: circuit.fitness)
+    def select(self, circuits: List[Circuit], count: int, use_surrogate=False) -> List[Circuit]:
+        if use_surrogate:
+            sorted_circuits = sorted(
+                circuits, key=lambda circuit: circuit.surrogate_fitness)
+        else:
+            sorted_circuits = sorted(
+                circuits, key=lambda circuit: circuit.true_fitness)
+
         selected_circuits = sorted_circuits[:count]
         return selected_circuits
 

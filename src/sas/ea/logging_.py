@@ -7,8 +7,7 @@ from .params import EAParams
 
 
 def log_epoch_results(generation: int,
-                      true_fitness_min: float,
-                      fitness_min: float, fitness_median: float, fitness_mean: float, fitness_stdev: float,
+                      fitness_min: float,
                       ea_duration: float, eval_duration: float, train_duration: float, pred_duration: float,
                       ea_memory: float, eval_memory: float, train_memory: float, pred_memory: float,
                       fitness_mse: float, rank_correlation: float,
@@ -23,7 +22,7 @@ def log_epoch_results(generation: int,
     with open(target_path, "a") as target_file:
 
         if add_header:
-            header = "generation; true_fitness_min; fitness_best; fitness_median; fitness_mean; fitness_stdev; "
+            header = "generation; fitness_best; "
             header += "ea_duration; eval_duration; train_duration; pred_duration; total_duration; "
             header += "ea_memory; eval_memory; train_memory; pred_memory; max_memory; "
             header += "fitness_mse; rank_correlation; survival_rate; "
@@ -43,7 +42,7 @@ def log_epoch_results(generation: int,
         if pred_memory is not None and pred_memory > max_memory:
             max_memory = pred_memory
 
-        line = f"{generation}; {true_fitness_min}; {fitness_min}; {fitness_median}; {fitness_mean}; {fitness_stdev}; "
+        line = f"{generation}; {fitness_min}; "
         line += f"{ea_duration}; {eval_duration}; {train_duration}; {pred_duration}; {total_duration}; "
         line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}; "
         line += f"{fitness_mse}; {rank_correlation}; {survival_rate}; "

@@ -96,7 +96,7 @@ class CircuitFeatureSurrogate(ISurrogate):
             extract_gate_frequencies(circuit) for circuit in circuits
         ])
         y = torch.Tensor([
-            [circuit.fitness] for circuit in circuits
+            [circuit.true_fitness] for circuit in circuits
         ])
 
         X_train = X[:int(len(X) * (1 - self.validation_split))]
@@ -134,6 +134,10 @@ class CircuitFeatureSurrogate(ISurrogate):
 
             if self.patience is not None and epochs_without_improvement >= self.patience:
                 break
+
+        # Reset predicted fitness to allow for a more objective surrogate evaluation.
+        for circuit in circuits:
+            circuit.surrogate_fitness = None 
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
         with torch.no_grad():

@@ -118,7 +118,7 @@ class GNNSurrogate(ISurrogate):
             circuit_to_pyg_data(circuit) for circuit in circuits
         ]
         y = torch.Tensor([
-            [circuit.fitness] for circuit in circuits
+            [circuit.true_fitness] for circuit in circuits
         ])
 
         X_train = X[:int(len(X) * self.validation_split)]
@@ -162,6 +162,10 @@ class GNNSurrogate(ISurrogate):
 
             if self.patience is not None and epochs_without_improvement >= self.patience:
                 break
+
+        # Reset predicted fitness to allow for a more objective surrogate evaluation.
+        for circuit in circuits:
+            circuit.surrogate_fitness = None
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
         with torch.no_grad():
