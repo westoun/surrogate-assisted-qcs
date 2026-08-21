@@ -17,7 +17,8 @@ from src.sas.surrogates import ISurrogate
 from .params import EAParams
 from .logging_ import log_epoch_results
 from .logging_metrics import evaluate_surrogate, \
-    compute_survival_rate, compute_population_diversity
+    compute_survival_rate, compute_population_diversity, \
+    compute_selection_overlap
 
 
 class EvolutionaryAlgorithm():
@@ -42,14 +43,16 @@ class EvolutionaryAlgorithm():
             with time_recorder["eval"]:
                 self.evaluate(population)
 
+        true_fitness_scores = [
+            circuit.true_fitness for circuit in population
+        ]
+
+        fitness_min = min(true_fitness_scores)
+
         with memory_recorder["train"]:
             with time_recorder["train"]:
                 if self.surrogate is not None:
                     self.surrogate.train(population)
-
-        fitness_min = min([
-            circuit.true_fitness for circuit in population
-        ])
 
         population_diversity = compute_population_diversity(population)
 
@@ -65,7 +68,7 @@ class EvolutionaryAlgorithm():
             train_memory=memory_recorder["train"].peak,
             pred_memory=memory_recorder["pred"].peak,
             fitness_mse=None, rank_correlation=None,
-            survival_rate=None,
+            survival_rate=None, selection_overlap=None,
             population_diversity=population_diversity,
             explicit_evaluations=len(population),
             params=self.params)
@@ -95,7 +98,8 @@ class EvolutionaryAlgorithm():
 
             population = parents + offspring
 
-            fitness_mse, rank_correlation = None, None
+            fitness_mse, rank_correlation, selection_overlap = None, None, None
+
             if self.surrogate is None:
 
                 explicit_evaluations += len(offspring)
@@ -122,20 +126,29 @@ class EvolutionaryAlgorithm():
 
                 # Do not time log here, as predictions are only used for surrogate
                 # evaluation.
-                surrogate_fitness_scores = self.surrogate.predict(
+                surrogate_fitness_scores_of_new_circuits = self.surrogate.predict(
                     circuits_to_evaluate)
-                true_fitness_scores = [
+                true_fitness_scores_of_new_circuits = [
                     circuit.true_fitness for circuit in circuits_to_evaluate
                 ]
 
-                fitness_min = min(min([
-                    circuit.true_fitness for circuit in population
-                ]), fitness_min)
-
                 fitness_mse, rank_correlation = evaluate_surrogate(
-                    true_fitness_scores=true_fitness_scores,
-                    surrogate_fitness_scores=surrogate_fitness_scores
+                    true_fitness_scores=true_fitness_scores_of_new_circuits,
+                    surrogate_fitness_scores=surrogate_fitness_scores_of_new_circuits
                 )
+
+                true_fitness_scores = [
+                    circuit.true_fitness for circuit in population
+                ]
+
+                # Don't log time here, as this step is only carried out to evaluate
+                # the surrogate and does not affect the search itself.
+                surrogate_fitness_scores = self.surrogate.predict(population)
+
+                selection_overlap = compute_selection_overlap(
+                    true_fitness_scores, surrogate_fitness_scores, count=self.params.parent_count)
+
+                fitness_min = min(min(true_fitness_scores), fitness_min)
 
                 with memory_recorder["train"]:
                     with time_recorder["train"]:
@@ -161,6 +174,7 @@ class EvolutionaryAlgorithm():
                 train_memory=memory_recorder["train"].peak,
                 pred_memory=memory_recorder["pred"].peak,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
+                selection_overlap=selection_overlap,
                 survival_rate=survival_rate,
                 population_diversity=population_diversity,
                 explicit_evaluations=explicit_evaluations,

@@ -19,6 +19,27 @@ from .params import EAParams
 from .logging_ import log_epoch_results
 
 
+def compute_selection_overlap(true_fitness_scores: List[float], surrogate_fitness_scores: List[float], count: int = 100) -> float:
+    true_scores_with_ids = list(enumerate(true_fitness_scores))
+    surrogate_scores_with_ids = list(enumerate(surrogate_fitness_scores))
+
+    true_scores_with_ids.sort(key=lambda item: item[1])
+    surrogate_scores_with_ids.sort(key=lambda item: item[1])
+
+    true_score_selected_ids = [
+        i for (i, score) in true_scores_with_ids[:count]
+    ]
+    surrogate_score_selected_ids = [
+        i for (i, score) in surrogate_scores_with_ids[:count]
+    ]
+
+    overlap = [
+        i for i in surrogate_score_selected_ids if i in true_score_selected_ids
+    ]
+
+    return len(overlap) / count
+
+
 def compute_survival_rate(new_parents: List[Circuit], prev_offspring: List[Circuit]) -> float:
     if prev_offspring is None:
         return None
