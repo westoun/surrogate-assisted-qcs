@@ -47,11 +47,6 @@ class EvolutionaryAlgorithm():
                 if self.surrogate is not None:
                     self.surrogate.train(population)
 
-        with memory_recorder["pred"]:
-            with time_recorder["pred"]:
-                if self.surrogate is not None:
-                    self.surrogate.evaluate(population)
-
         fitness_min = min([
             circuit.true_fitness for circuit in population
         ])
@@ -145,18 +140,11 @@ class EvolutionaryAlgorithm():
                     with time_recorder["train"]:
                         self.surrogate.train(population)
 
-                # If the model is trainable, than its prediction accuracy is likely to
-                # improve. In that case, the model might choose to reset previous
-                # fitness scores.
-                with memory_recorder["pred"]:
-                    with time_recorder["pred"]:
-                        self.surrogate.evaluate(population)
-
             else:
 
                 with memory_recorder["pred"]:
                     with time_recorder["pred"]:
-                        self.surrogate.evaluate(offspring)
+                        self.surrogate.evaluate(population)
 
             parent_diversity = compute_population_diversity(parents)
             offspring_diversity = compute_population_diversity(offspring)
