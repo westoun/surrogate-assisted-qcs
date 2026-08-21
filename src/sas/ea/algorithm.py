@@ -66,8 +66,6 @@ class EvolutionaryAlgorithm():
             pred_memory=memory_recorder["pred"].peak,
             fitness_mse=None, rank_correlation=None,
             survival_rate=None,
-            parent_diversity=None,
-            offspring_diversity=None,
             population_diversity=population_diversity,
             explicit_evaluations=len(population),
             params=self.params)
@@ -124,7 +122,8 @@ class EvolutionaryAlgorithm():
 
                 # Do not time log here, as predictions are only used for surrogate
                 # evaluation.
-                surrogate_fitness_scores = self.surrogate.predict(circuits_to_evaluate)
+                surrogate_fitness_scores = self.surrogate.predict(
+                    circuits_to_evaluate)
                 true_fitness_scores = [
                     circuit.true_fitness for circuit in circuits_to_evaluate
                 ]
@@ -148,8 +147,6 @@ class EvolutionaryAlgorithm():
                     with time_recorder["pred"]:
                         self.surrogate.evaluate(population)
 
-            parent_diversity = compute_population_diversity(parents)
-            offspring_diversity = compute_population_diversity(offspring)
             population_diversity = compute_population_diversity(population)
 
             log_epoch_results(
@@ -165,8 +162,6 @@ class EvolutionaryAlgorithm():
                 pred_memory=memory_recorder["pred"].peak,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
                 survival_rate=survival_rate,
-                parent_diversity=parent_diversity,
-                offspring_diversity=offspring_diversity,
                 population_diversity=population_diversity,
                 explicit_evaluations=explicit_evaluations,
                 params=self.params)

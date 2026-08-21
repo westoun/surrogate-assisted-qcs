@@ -12,7 +12,7 @@ def log_epoch_results(generation: int,
                       ea_memory: float, eval_memory: float, train_memory: float, pred_memory: float,
                       fitness_mse: float, rank_correlation: float,
                       survival_rate: float,
-                      parent_diversity: float, offspring_diversity: float, population_diversity: float,
+                      population_diversity: float,
                       explicit_evaluations: int,
                       params: EAParams) -> None:
     target_path = params.logging_prefix + "_results.csv"
@@ -26,7 +26,7 @@ def log_epoch_results(generation: int,
             header += "ea_duration; eval_duration; train_duration; pred_duration; total_duration; "
             header += "ea_memory; eval_memory; train_memory; pred_memory; max_memory; "
             header += "fitness_mse; rank_correlation; survival_rate; "
-            header += "parent_diversity; offspring_diversity; population_diversity; "
+            header += "population_diversity; "
             header += "explicit_evaluations"
             target_file.write(header + "\n")
 
@@ -46,6 +46,6 @@ def log_epoch_results(generation: int,
         line += f"{ea_duration}; {eval_duration}; {train_duration}; {pred_duration}; {total_duration}; "
         line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}; "
         line += f"{fitness_mse}; {rank_correlation}; {survival_rate}; "
-        line += f"{parent_diversity}; {offspring_diversity}; {population_diversity}; "
+        line += f"{population_diversity}; "
         line += f"{explicit_evaluations}"
         target_file.write(line + "\n")
