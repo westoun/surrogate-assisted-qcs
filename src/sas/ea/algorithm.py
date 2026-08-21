@@ -112,9 +112,11 @@ class EvolutionaryAlgorithm():
 
             elif generation % self.params.evaluate_every == 0:
 
-                explicit_evaluations += len([
+                circuits_to_evaluate = [
                     circuit for circuit in population if circuit.true_fitness is None
-                ])
+                ]
+
+                explicit_evaluations += len(circuits_to_evaluate)
 
                 with memory_recorder["eval"]:
                     with time_recorder["eval"]:
@@ -122,9 +124,9 @@ class EvolutionaryAlgorithm():
 
                 # Do not time log here, as predictions are only used for surrogate
                 # evaluation.
-                surrogate_fitness_scores = self.surrogate.predict(population)
+                surrogate_fitness_scores = self.surrogate.predict(circuits_to_evaluate)
                 true_fitness_scores = [
-                    circuit.true_fitness for circuit in population
+                    circuit.true_fitness for circuit in circuits_to_evaluate
                 ]
 
                 fitness_min = min(min([
