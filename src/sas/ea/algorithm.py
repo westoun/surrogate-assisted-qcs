@@ -71,14 +71,18 @@ class EvolutionaryAlgorithm():
             survival_rate=None, selection_overlap=None,
             population_diversity=population_diversity,
             explicit_evaluations=len(population),
+            cum_explicit_evaluations=len(population),
             params=self.params)
 
         # Init variable outside of loop to ensure it is available
         # for survival rate computation.
         offspring = None
-        explicit_evaluations = len(population)
+
+        cum_explicit_evaluations = len(population)
 
         for generation in range(1, 20_000):  # High number for max generations
+
+            explicit_evaluations = 0
 
             with memory_recorder["ea"]:
                 with time_recorder["ea"]:
@@ -98,11 +102,13 @@ class EvolutionaryAlgorithm():
 
             population = parents + offspring
 
+            population_diversity = compute_population_diversity(population)
             fitness_mse, rank_correlation, selection_overlap = None, None, None
 
             if self.surrogate is None:
 
-                explicit_evaluations += len(offspring)
+                explicit_evaluations = len(offspring)
+                cum_explicit_evaluations += explicit_evaluations
 
                 with memory_recorder["eval"]:
                     with time_recorder["eval"]:
@@ -118,7 +124,8 @@ class EvolutionaryAlgorithm():
                     circuit for circuit in population if circuit.true_fitness is None
                 ]
 
-                explicit_evaluations += len(circuits_to_evaluate)
+                explicit_evaluations = len(circuits_to_evaluate)
+                cum_explicit_evaluations += explicit_evaluations
 
                 with memory_recorder["eval"]:
                     with time_recorder["eval"]:
@@ -160,8 +167,6 @@ class EvolutionaryAlgorithm():
                     with time_recorder["pred"]:
                         self.surrogate.evaluate(population)
 
-            population_diversity = compute_population_diversity(population)
-
             log_epoch_results(
                 generation=generation,
                 fitness_min=fitness_min,
@@ -178,9 +183,10 @@ class EvolutionaryAlgorithm():
                 survival_rate=survival_rate,
                 population_diversity=population_diversity,
                 explicit_evaluations=explicit_evaluations,
+                cum_explicit_evaluations=cum_explicit_evaluations,
                 params=self.params)
 
-            if explicit_evaluations >= self.params.max_evaluations:
+            if cum_explicit_evaluations >= self.params.max_evaluations:
                 break
 
     def init_population(self, count: int, max_tries: int = 100_000) -> List[Circuit]:

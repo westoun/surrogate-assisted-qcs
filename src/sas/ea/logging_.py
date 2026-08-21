@@ -13,7 +13,7 @@ def log_epoch_results(generation: int,
                       fitness_mse: float, rank_correlation: float, selection_overlap: float,
                       survival_rate: float,
                       population_diversity: float,
-                      explicit_evaluations: int,
+                      explicit_evaluations: int, cum_explicit_evaluations: int,
                       params: EAParams) -> None:
     target_path = params.logging_prefix + "_results.csv"
 
@@ -27,7 +27,7 @@ def log_epoch_results(generation: int,
             header += "ea_memory; eval_memory; train_memory; pred_memory; max_memory; "
             header += "fitness_mse; rank_correlation; survival_rate; selection_overlap; "
             header += "population_diversity; "
-            header += "explicit_evaluations"
+            header += "explicit_evaluations; cum_explicit_evaluations"
             target_file.write(header + "\n")
 
         total_duration = ea_duration + eval_duration + train_duration + pred_duration
@@ -47,5 +47,5 @@ def log_epoch_results(generation: int,
         line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}; "
         line += f"{fitness_mse}; {rank_correlation}; {survival_rate}; {selection_overlap}; "
         line += f"{population_diversity}; "
-        line += f"{explicit_evaluations}"
+        line += f"{explicit_evaluations}; {cum_explicit_evaluations}"
         target_file.write(line + "\n")
