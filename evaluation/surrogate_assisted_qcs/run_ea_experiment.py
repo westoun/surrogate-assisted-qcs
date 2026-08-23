@@ -16,7 +16,7 @@ from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, CALIBRATED_STATE_VECTOR_SURROGATE, \
     CalibratedStateVectorSurrogate
 
-from logging_ import log_experiment_details, log_end_timestamp
+from logging_ import log_experiment_details, log_end_timestamp, update_experiment_details
 
 
 @click.command()
@@ -129,7 +129,9 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     ea = EvolutionaryAlgorithm(ea_params, surrogate)
     ea.run()
 
-    log_end_timestamp(logging_prefix=logging_prefix)
+    update_experiment_details(logging_prefix=logging_prefix,
+                              surrogate_params=surrogate_params,
+                              log_end_timestamp=True)
 
 
 if __name__ == "__main__":

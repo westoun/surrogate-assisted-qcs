@@ -37,12 +37,23 @@ def log_experiment_details(
     save_to_json(config, target_path)
 
 
-def log_end_timestamp(
-    logging_prefix: str
+def update_experiment_details(
+    logging_prefix: str,
+    ea_params: EAParams = None,
+    surrogate_params: Dict = None,
+    log_end_timestamp: bool = False
+
 ) -> None:
     target_path = logging_prefix + "_config.json"
     config = load_from_json(target_path)
 
-    config["meta"]["end"] = get_timestamp()
+    if ea_params is not None:
+        config["params"]["ea"] = ea_params
+
+    if surrogate_params is not None:
+        config["params"]["surrogate"] = surrogate_params
+
+    if log_end_timestamp:
+        config["meta"]["end"] = get_timestamp()
 
     save_to_json(config, target_path)
