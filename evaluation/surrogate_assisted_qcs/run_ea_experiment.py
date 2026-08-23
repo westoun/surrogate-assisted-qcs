@@ -115,8 +115,13 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
 
+    surrogate_params = {}
+    if surrogate is not None:
+        surrogate_params = surrogate.params
+
     log_experiment_details(
         ea_params=ea_params,
+        surrogate_params=surrogate_params,
         seed=seed,
         tag=tag,
         logging_prefix=logging_prefix
@@ -125,9 +130,8 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     ea = EvolutionaryAlgorithm(ea_params, surrogate)
     ea.run()
 
-    surrogate_params = None
     if surrogate is not None:
-        surrogate_params = surrogate.params
+            surrogate_params = surrogate.params
 
     update_experiment_details(logging_prefix=logging_prefix,
                               surrogate_params=surrogate_params,
