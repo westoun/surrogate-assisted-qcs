@@ -99,8 +99,8 @@ class EvolutionaryAlgorithm():
                         parents = self.select(
                             population, count=self.params.parent_count, use_surrogate=True)
 
-                    survival_rate = compute_survival_rate(
-                        new_parents=parents, prev_offspring=offspring)
+                    # survival_rate = compute_survival_rate(
+                    #     new_parents=parents, prev_offspring=offspring)
 
                     offspring = self.mutate(
                         parents, count=self.params.offspring_count)
@@ -185,7 +185,7 @@ class EvolutionaryAlgorithm():
                 pred_memory=memory_recorder["pred"].peak,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
                 selection_overlap=selection_overlap,
-                survival_rate=survival_rate,
+                survival_rate=None,
                 population_diversity=population_diversity,
                 explicit_evaluations=explicit_evaluations,
                 cum_explicit_evaluations=cum_explicit_evaluations,
