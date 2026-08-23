@@ -15,3 +15,4 @@ class EAParams:
     qubit_num: int
     gate_count: int
     logging_prefix: str
+    seed_population_size: int = None

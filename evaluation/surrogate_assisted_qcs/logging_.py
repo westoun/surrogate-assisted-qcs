@@ -26,7 +26,8 @@ def log_experiment_details(
                 "max_evaluations": ea_params.max_evaluations,
                 "qubit_num": ea_params.qubit_num,
                 "gate_count": ea_params.gate_count,
-                "evaluate_every": ea_params.evaluate_every
+                "evaluate_every": ea_params.evaluate_every,
+                "seed_population_size": ea_params.seed_population_size
             },
             "surrogate": surrogate_params,
             "seed": seed,

@@ -36,8 +36,13 @@ class EvolutionaryAlgorithm():
 
         with memory_recorder["ea"]:
             with time_recorder["ea"]:
+                if self.params.seed_population_size is None:
+                    seed_population_size = self.params.parent_count + self.params.offspring_count
+                else:
+                    seed_population_size = self.params.seed_population_size
+
                 population = self.init_population(
-                    count=self.params.parent_count + self.params.offspring_count)
+                    count=seed_population_size)
 
         with memory_recorder["eval"]:
             with time_recorder["eval"]:
