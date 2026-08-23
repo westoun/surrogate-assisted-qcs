@@ -8,10 +8,10 @@ from src.sas.utils.time import get_timestamp
 
 def log_experiment_details(
     ea_params: EAParams,
-    surrogate_params: Dict,
     seed: int,
     tag: str,
-    logging_prefix: str
+    logging_prefix: str,
+    surrogate_params: Dict = None
 ) -> None:
     target_path = logging_prefix + "_config.json"
 

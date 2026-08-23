@@ -16,7 +16,7 @@ from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, CALIBRATED_STATE_VECTOR_SURROGATE, \
     CalibratedStateVectorSurrogate
 
-from logging_ import log_experiment_details, log_end_timestamp, update_experiment_details
+from logging_ import log_experiment_details, update_experiment_details
 
 
 @click.command()
@@ -113,14 +113,8 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
 
-    if surrogate is None:
-        surrogate_params = {}
-    else:
-        surrogate_params = surrogate.params
-
     log_experiment_details(
         ea_params=ea_params,
-        surrogate_params=surrogate_params,
         seed=seed,
         tag=tag,
         logging_prefix=logging_prefix
@@ -128,6 +122,10 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
 
     ea = EvolutionaryAlgorithm(ea_params, surrogate)
     ea.run()
+
+    surrogate_params = None
+    if surrogate is not None:
+        surrogate_params = surrogate.params
 
     update_experiment_details(logging_prefix=logging_prefix,
                               surrogate_params=surrogate_params,
