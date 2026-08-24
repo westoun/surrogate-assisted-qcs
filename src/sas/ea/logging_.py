@@ -10,6 +10,7 @@ def log_epoch_results(generation: int,
                       fitness_min: float,
                       ea_duration: float, eval_duration: float, train_duration: float, pred_duration: float,
                       ea_memory: float, eval_memory: float, train_memory: float, pred_memory: float,
+                      fitness_mse_new_circuits: float, rank_correlation_new_circuits: float,
                       fitness_mse: float, rank_correlation: float, selection_overlap: float,
                       survival_rate: float,
                       population_diversity: float,
@@ -25,6 +26,7 @@ def log_epoch_results(generation: int,
             header = "generation; fitness_best; "
             header += "ea_duration; eval_duration; train_duration; pred_duration; total_duration; "
             header += "ea_memory; eval_memory; train_memory; pred_memory; max_memory; "
+            header += "fitness_mse_new_circuits; rank_correlation_new_circuits; "
             header += "fitness_mse; rank_correlation; survival_rate; selection_overlap; "
             header += "population_diversity; "
             header += "explicit_evaluations; cum_explicit_evaluations"
@@ -45,6 +47,7 @@ def log_epoch_results(generation: int,
         line = f"{generation}; {fitness_min}; "
         line += f"{ea_duration}; {eval_duration}; {train_duration}; {pred_duration}; {total_duration}; "
         line += f"{ea_memory}; {eval_memory}; {train_memory}; {pred_memory}; {max_memory}; "
+        line += f"{fitness_mse_new_circuits}; {rank_correlation_new_circuits}; "
         line += f"{fitness_mse}; {rank_correlation}; {survival_rate}; {selection_overlap}; "
         line += f"{population_diversity}; "
         line += f"{explicit_evaluations}; {cum_explicit_evaluations}"

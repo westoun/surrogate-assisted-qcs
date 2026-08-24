@@ -72,6 +72,8 @@ class EvolutionaryAlgorithm():
             eval_memory=memory_recorder["eval"].peak,
             train_memory=memory_recorder["train"].peak,
             pred_memory=memory_recorder["pred"].peak,
+            fitness_mse_new_circuits=None, 
+            rank_correlation_new_circuits=None,
             fitness_mse=None, rank_correlation=None,
             survival_rate=None, selection_overlap=None,
             population_diversity=population_diversity,
@@ -108,6 +110,7 @@ class EvolutionaryAlgorithm():
             population = parents + offspring
 
             population_diversity = compute_population_diversity(population)
+            fitness_mse_new_circuits, rank_correlation_new_circuits = None, None
             fitness_mse, rank_correlation, selection_overlap = None, None, None
 
             if self.surrogate is None:
@@ -144,7 +147,7 @@ class EvolutionaryAlgorithm():
                     circuit.true_fitness for circuit in circuits_to_evaluate
                 ]
 
-                fitness_mse, rank_correlation = evaluate_surrogate(
+                fitness_mse_new_circuits, rank_correlation_new_circuits = evaluate_surrogate(
                     true_fitness_scores=true_fitness_scores_of_new_circuits,
                     surrogate_fitness_scores=surrogate_fitness_scores_of_new_circuits
                 )
@@ -156,6 +159,11 @@ class EvolutionaryAlgorithm():
                 # Don't log time here, as this step is only carried out to evaluate
                 # the surrogate and does not affect the search itself.
                 surrogate_fitness_scores = self.surrogate.predict(population)
+
+                fitness_mse, rank_correlation = evaluate_surrogate(
+                    true_fitness_scores=true_fitness_scores,
+                    surrogate_fitness_scores=surrogate_fitness_scores
+                )
 
                 selection_overlap = compute_selection_overlap(
                     true_fitness_scores, surrogate_fitness_scores, count=self.params.parent_count)
@@ -183,6 +191,8 @@ class EvolutionaryAlgorithm():
                 eval_memory=memory_recorder["eval"].peak,
                 train_memory=memory_recorder["train"].peak,
                 pred_memory=memory_recorder["pred"].peak,
+                fitness_mse_new_circuits=fitness_mse_new_circuits, 
+                rank_correlation_new_circuits=rank_correlation_new_circuits,
                 fitness_mse=fitness_mse, rank_correlation=rank_correlation,
                 selection_overlap=selection_overlap,
                 survival_rate=None,
