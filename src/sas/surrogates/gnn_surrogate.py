@@ -61,7 +61,7 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
 
 class Model(nn.Module):
-    def __init__(self, channel_counts: List[int]):
+    def __init__(self, channel_counts: List[int], dropout: float):
         super().__init__()
 
         layers = [
@@ -75,6 +75,9 @@ class Model(nn.Module):
             )
             layers.append(
                 nn.ReLU()
+            )
+            layers.append(
+                nn.Dropout(p=dropout)
             )
 
         layers.append(nn.Linear(channel_counts[-1], 1))
@@ -102,6 +105,7 @@ class GNNSurrogate(ISurrogate):
     patience: int
     delta: float
     validation_split: float
+    dropout: float
     channel_counts: List[int]
 
     def __init__(self,
@@ -109,14 +113,16 @@ class GNNSurrogate(ISurrogate):
                  max_epochs: int = 200,
                  patience: int = 5,
                  delta: float = 1e-5,
-                 validation_split: float = 0.2):
-        self.model = Model(channel_counts)
+                 validation_split: float = 0.2,
+                 dropout: float = 0.0):
+        self.model = Model(channel_counts, dropout=dropout)
 
         self.channel_counts = channel_counts
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
         self.validation_split = validation_split
+        self.dropout = dropout
 
     def train(self, circuits: List[Circuit]) -> None:
         X = [
@@ -197,5 +203,6 @@ class GNNSurrogate(ISurrogate):
             "patience": self.patience,
             "delta": self.delta,
             "validation_split": self.validation_split,
-            "channel_counts": self.channel_counts
+            "channel_counts": self.channel_counts,
+            "dropout": self.dropout
         }
