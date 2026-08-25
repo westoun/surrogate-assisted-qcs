@@ -73,6 +73,9 @@ class Model(nn.Module):
                     channel_counts[i-1], channel_count
                 )
             )
+            layers.append(
+                nn.ReLU()
+            )
 
         layers.append(nn.Linear(channel_counts[-1], 1))
         self.layers = nn.ModuleList(layers)
@@ -81,8 +84,10 @@ class Model(nn.Module):
         x, edge_index = data.x, data.edge_index
 
         for layer in self.layers[:-1]:
-            x = layer(x, edge_index)
-            x = nn.functional.relu(x)
+            if type(layer) == GCNConv:
+                x = layer(x, edge_index)
+            else:
+                x = layer(x)
 
         x = global_mean_pool(x, data.batch)
         x = self.layers[-1](x)
