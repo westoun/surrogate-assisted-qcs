@@ -116,6 +116,8 @@ class CircuitFeatureSurrogate(ISurrogate):
         criterion = torch.nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters())
 
+        self.model.train()
+
         last_val_loss = np.inf
         epochs_without_improvement = 0
 
@@ -149,6 +151,8 @@ class CircuitFeatureSurrogate(ISurrogate):
             circuit.surrogate_fitness = None
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
+        self.model.eval()
+        
         with torch.no_grad():
             X = torch.Tensor([
                 extract_gate_frequencies(circuit) for circuit in circuits
