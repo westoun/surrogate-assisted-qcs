@@ -16,14 +16,6 @@ GNN_SURROGATE = "gnn"
 
 
 def circuit_to_pyg_data(circuit: Circuit) -> Data:
-
-    GATE2ID = {
-        H: 0,
-        S: 1,
-        T: 2,
-        CX: 3
-    }
-
     node_features = []
     edges_from = []
     edges_to = []
@@ -34,11 +26,26 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
     for gate_i, gate in enumerate(circuit.gates):
 
-        node_features.append([
-            GATE2ID[type(gate)],
-            gate.qubits[0],
-            gate.qubits[1] if len(gate.qubits) > 1 else -1
-        ])
+        gate_type_vector = [0] * 4
+        if type(gate) == H:
+            gate_type_vector[0] = 1
+        elif type(gate) == S:
+            gate_type_vector[1] = 1
+        elif type(gate) == T:
+            gate_type_vector[2] = 1
+        elif type(gate) == CX:
+            gate_type_vector[3] = 1
+        else:
+            raise NotImplementedError(f"Unknown gate type '{type(gate)}'")
+
+        qubit1_vector = [0] * circuit.qubit_num
+        qubit1_vector[gate.qubits[0]] = 1
+
+        qubit2_vector = [0] * circuit.qubit_num
+        if len(gate.qubits) > 1:
+            qubit2_vector[gate.qubits[1]] = 1
+
+        node_features.append(gate_type_vector + qubit1_vector + qubit2_vector)
 
         for qubit in gate.qubits:
 
@@ -61,11 +68,11 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
 
 class Model(nn.Module):
-    def __init__(self, channel_counts: List[int], dropout: float):
+    def __init__(self, qubit_num: int, channel_counts: List[int], dropout: float):
         super().__init__()
 
         layers = [
-            GCNConv(3, channel_counts[0])
+            GCNConv(4 + 2 * qubit_num, channel_counts[0])
         ]
         for i, channel_count in enumerate(channel_counts[1:]):
             layers.append(
@@ -109,13 +116,15 @@ class GNNSurrogate(ISurrogate):
     channel_counts: List[int]
 
     def __init__(self,
+                 qubit_num: int,
                  channel_counts: List[int],
                  max_epochs: int = 200,
                  patience: int = 5,
                  delta: float = 1e-5,
                  validation_split: float = 0.2,
                  dropout: float = 0.0):
-        self.model = Model(channel_counts, dropout=dropout)
+        self.model = Model(qubit_num=qubit_num,
+                           channel_counts=channel_counts, dropout=dropout)
 
         self.channel_counts = channel_counts
         self.max_epochs = max_epochs
