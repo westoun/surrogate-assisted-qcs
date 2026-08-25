@@ -69,7 +69,7 @@ from logging_ import log_experiment_details, update_experiment_details
 def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    seed_population_size = None
+    seed_population_size = 1000
     max_evaluations = 10_000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{seed}s_{str(uuid4())}"
 
@@ -98,7 +98,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         surrogate = None
     elif model == CIRCUIT_FEATURE_SURROGATE:
         surrogate: ISurrogate = CircuitFeatureSurrogate(
-            qubit_num, neuron_counts=[512, 512], max_epochs=10_000)
+            qubit_num, neuron_counts=[512, 512], max_epochs=10_000, dropout=0.0)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == CALIBRATED_STATE_VECTOR_SURROGATE:
@@ -110,7 +110,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         surrogate: ISurrogate = RandomFitnessSurrogate()
     elif model == GNN_SURROGATE:
         surrogate: ISurrogate = GNNSurrogate(
-            channel_counts=[128, 128], max_epochs=10_000)
+            channel_counts=[128, 128], max_epochs=10_000, dropout=0.5)
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
@@ -131,7 +131,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     ea.run()
 
     if surrogate is not None:
-            surrogate_params = surrogate.params
+        surrogate_params = surrogate.params
 
     update_experiment_details(logging_prefix=logging_prefix,
                               surrogate_params=surrogate_params,
