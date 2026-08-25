@@ -13,7 +13,7 @@ CIRCUIT_FEATURE_SURROGATE = "circuit_feature"
 
 
 class Model(nn.Module):
-    def __init__(self, qubit_num: int, neuron_counts: List[int]):
+    def __init__(self, qubit_num: int, neuron_counts: List[int], dropout: float):
         super().__init__()
 
         feature_count = 4 + 4 * qubit_num
@@ -21,10 +21,18 @@ class Model(nn.Module):
         layers = [
             nn.Linear(feature_count, neuron_counts[0])
         ]
+
         for i, neuron_count in enumerate(neuron_counts[1:]):
             layers.append(
                 nn.Linear(neuron_counts[i - 1], neuron_count)
             )
+            layers.append(
+                nn.ReLU()
+            )
+            layers.append(
+                nn.Dropout(p=dropout)
+            )
+
         layers.append(
             nn.Linear(neuron_counts[-1], 1)
         )
@@ -32,11 +40,8 @@ class Model(nn.Module):
         self.layers = nn.ModuleList(layers)
 
     def forward(self, x):
-        for layer in self.layers[:-1]:
+        for layer in self.layers:
             x = layer(x)
-            x = nn.functional.relu(x)
-
-        x = self.layers[-1](x)
         return x
 
 
@@ -75,6 +80,7 @@ class CircuitFeatureSurrogate(ISurrogate):
     patience: int
     delta: float
     validation_split: float
+    dropout: float
     neuron_counts: List[int]
 
     def __init__(self, qubit_num: int,
@@ -82,14 +88,17 @@ class CircuitFeatureSurrogate(ISurrogate):
                  max_epochs: int = 200,
                  patience: int = 5,
                  delta: float = 1e-5,
-                 validation_split: float = 0.2):
-        self.model = Model(qubit_num=qubit_num, neuron_counts=neuron_counts)
+                 validation_split: float = 0.2,
+                 dropout: float = 0.0):
+        self.model = Model(qubit_num=qubit_num,
+                           neuron_counts=neuron_counts, dropout=dropout)
 
         self.neuron_counts = neuron_counts
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
         self.validation_split = validation_split
+        self.dropout = dropout
 
     def train(self, circuits: List[Circuit]) -> None:
         X = torch.Tensor([
@@ -137,7 +146,7 @@ class CircuitFeatureSurrogate(ISurrogate):
 
         # Reset predicted fitness to allow for a more objective surrogate evaluation.
         for circuit in circuits:
-            circuit.surrogate_fitness = None 
+            circuit.surrogate_fitness = None
 
     def predict(self, circuits: List[Circuit]) -> List[float]:
         with torch.no_grad():
@@ -159,5 +168,6 @@ class CircuitFeatureSurrogate(ISurrogate):
             "patience": self.patience,
             "delta": self.delta,
             "validation_split": self.validation_split,
-            "neuron_counts": self.neuron_counts
+            "neuron_counts": self.neuron_counts,
+            "dropout": self.dropout
         }
