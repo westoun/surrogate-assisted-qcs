@@ -23,6 +23,8 @@ def circuit_to_qiskit(circuit: Circuit, add_measurement: bool = False, base_stat
         assert base_state < 2 ** circuit.qubit_num
 
         bit_string = bin(base_state)[2:].zfill(circuit.qubit_num)
+        bit_string = reversed(bit_string)
+
         for bit_i, bit_value in enumerate(bit_string):
 
             if bit_value == "1":
