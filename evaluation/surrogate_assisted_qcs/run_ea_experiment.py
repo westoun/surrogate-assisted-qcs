@@ -69,8 +69,8 @@ from logging_ import log_experiment_details, update_experiment_details
 def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    seed_population_size = 1000
-    max_evaluations = 10_000
+    seed_population_size = 2000
+    max_evaluations = 150_000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{seed}s_{str(uuid4())}"
 
     if seed is not None:
@@ -110,6 +110,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         surrogate: ISurrogate = RandomFitnessSurrogate()
     elif model == GNN_SURROGATE:
         surrogate: ISurrogate = GNNSurrogate(
+            qubit_num,
             channel_counts=[128, 128], max_epochs=10_000, dropout=0.5)
     else:
         raise NotImplementedError(
