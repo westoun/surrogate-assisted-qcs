@@ -16,10 +16,17 @@ class ISurrogate(ABC):
         ...
 
     def evaluate(self, circuits: List[Circuit]) -> None:
-        fitness_scores = self.predict(circuits)
+        circuits_to_evaluate = [
+            circuit for circuit in circuits if circuit.surrogate_fitness is None
+        ]
 
-        for circuit, fitness in zip(circuits, fitness_scores):
-            circuit.fitness = fitness
+        if len(circuits_to_evaluate) == 0:
+            return
+
+        fitness_scores = self.predict(circuits_to_evaluate)
+
+        for circuit, fitness in zip(circuits_to_evaluate, fitness_scores):
+            circuit.surrogate_fitness = fitness
 
     @property
     @abstractmethod

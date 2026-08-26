@@ -16,14 +16,6 @@ GNN_SURROGATE = "gnn"
 
 
 def circuit_to_pyg_data(circuit: Circuit) -> Data:
-
-    GATE2ID = {
-        H: 0,
-        S: 1,
-        T: 2,
-        CX: 3
-    }
-
     node_features = []
     edges_from = []
     edges_to = []
@@ -34,11 +26,26 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
     for gate_i, gate in enumerate(circuit.gates):
 
-        node_features.append([
-            GATE2ID[type(gate)],
-            gate.qubits[0],
-            gate.qubits[1] if len(gate.qubits) > 1 else -1
-        ])
+        gate_type_vector = [0] * 4
+        if type(gate) == H:
+            gate_type_vector[0] = 1
+        elif type(gate) == S:
+            gate_type_vector[1] = 1
+        elif type(gate) == T:
+            gate_type_vector[2] = 1
+        elif type(gate) == CX:
+            gate_type_vector[3] = 1
+        else:
+            raise NotImplementedError(f"Unknown gate type '{type(gate)}'")
+
+        qubit1_vector = [0] * circuit.qubit_num
+        qubit1_vector[gate.qubits[0]] = 1
+
+        qubit2_vector = [0] * circuit.qubit_num
+        if len(gate.qubits) > 1:
+            qubit2_vector[gate.qubits[1]] = 1
+
+        node_features.append(gate_type_vector + qubit1_vector + qubit2_vector)
 
         for qubit in gate.qubits:
 
@@ -61,17 +68,23 @@ def circuit_to_pyg_data(circuit: Circuit) -> Data:
 
 
 class Model(nn.Module):
-    def __init__(self, channel_counts: List[int]):
+    def __init__(self, qubit_num: int, channel_counts: List[int], dropout: float):
         super().__init__()
 
         layers = [
-            GCNConv(3, channel_counts[0])
+            GCNConv(4 + 2 * qubit_num, channel_counts[0])
         ]
         for i, channel_count in enumerate(channel_counts[1:]):
             layers.append(
                 GCNConv(
                     channel_counts[i-1], channel_count
                 )
+            )
+            layers.append(
+                nn.ReLU()
+            )
+            layers.append(
+                nn.Dropout(p=dropout)
             )
 
         layers.append(nn.Linear(channel_counts[-1], 1))
@@ -81,8 +94,10 @@ class Model(nn.Module):
         x, edge_index = data.x, data.edge_index
 
         for layer in self.layers[:-1]:
-            x = layer(x, edge_index)
-            x = nn.functional.relu(x)
+            if type(layer) == GCNConv:
+                x = layer(x, edge_index)
+            else:
+                x = layer(x)
 
         x = global_mean_pool(x, data.batch)
         x = self.layers[-1](x)
@@ -97,28 +112,33 @@ class GNNSurrogate(ISurrogate):
     patience: int
     delta: float
     validation_split: float
+    dropout: float
     channel_counts: List[int]
 
     def __init__(self,
+                 qubit_num: int,
                  channel_counts: List[int],
                  max_epochs: int = 200,
                  patience: int = 5,
                  delta: float = 1e-5,
-                 validation_split: float = 0.2):
-        self.model = Model(channel_counts)
+                 validation_split: float = 0.2,
+                 dropout: float = 0.0):
+        self.model = Model(qubit_num=qubit_num,
+                           channel_counts=channel_counts, dropout=dropout)
 
         self.channel_counts = channel_counts
         self.max_epochs = max_epochs
         self.patience = patience
         self.delta = delta
         self.validation_split = validation_split
+        self.dropout = dropout
 
     def train(self, circuits: List[Circuit]) -> None:
         X = [
             circuit_to_pyg_data(circuit) for circuit in circuits
         ]
         y = torch.Tensor([
-            [circuit.fitness] for circuit in circuits
+            [circuit.true_fitness] for circuit in circuits
         ])
 
         X_train = X[:int(len(X) * self.validation_split)]
@@ -134,6 +154,8 @@ class GNNSurrogate(ISurrogate):
 
         criterion = torch.nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters())
+
+        self.model.train()
 
         last_val_loss = np.inf
         epochs_without_improvement = 0
@@ -163,7 +185,13 @@ class GNNSurrogate(ISurrogate):
             if self.patience is not None and epochs_without_improvement >= self.patience:
                 break
 
+        # Reset predicted fitness to allow for a more objective surrogate evaluation.
+        for circuit in circuits:
+            circuit.surrogate_fitness = None
+
     def predict(self, circuits: List[Circuit]) -> List[float]:
+        self.model.eval()
+
         with torch.no_grad():
             X = [
                 circuit_to_pyg_data(circuit) for circuit in circuits
@@ -184,5 +212,6 @@ class GNNSurrogate(ISurrogate):
             "patience": self.patience,
             "delta": self.delta,
             "validation_split": self.validation_split,
-            "channel_counts": self.channel_counts
+            "channel_counts": self.channel_counts,
+            "dropout": self.dropout
         }

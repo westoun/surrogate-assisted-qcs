@@ -13,10 +13,10 @@ from src.sas.utils import random_circuit, simulate_unitary
 from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
-    RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, \
-    RANDOM_BASE_STATE_SURROGATE, RandomBaseStateSurrogate
+    RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, CALIBRATED_STATE_VECTOR_SURROGATE, \
+    CalibratedStateVectorSurrogate
 
-from logging_ import log_experiment_details, log_end_timestamp
+from logging_ import log_experiment_details, update_experiment_details
 
 
 @click.command()
@@ -28,8 +28,15 @@ from logging_ import log_experiment_details, log_end_timestamp
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, 'None', '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
           f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}', "
-          f"'{RANDOM_BASE_STATE_SURROGATE}'."
+          f"'{CALIBRATED_STATE_VECTOR_SURROGATE}'."
           )
+)
+@click.option(
+    "--evaluate_every",
+    "-ee",
+    type=click.INT,
+    default=5,
+    help="The interval at which explicit evaluation shall take place. Default is 5.",
 )
 @click.option(
     "--qubit-num",
@@ -59,11 +66,12 @@ from logging_ import log_experiment_details, log_end_timestamp
     default=None,
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
-def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: str):
+def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    max_generations = 500
-    logging_prefix = f"results/{qubit_num}qn{gate_count}gc{model}m{seed}s_{str(uuid4())}"
+    seed_population_size = 2000
+    max_evaluations = 150_000
+    logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{seed}s_{str(uuid4())}"
 
     if seed is not None:
         random.seed(seed)
@@ -78,33 +86,38 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
         target=target,
         parent_count=parent_count,
         offspring_count=offspring_count,
-        max_generations=max_generations,
+        max_evaluations=max_evaluations,
         qubit_num=qubit_num,
         gate_count=gate_count,
-        logging_prefix=logging_prefix
+        logging_prefix=logging_prefix,
+        evaluate_every=evaluate_every,
+        seed_population_size=seed_population_size
     )
 
     if model is None or model == "None":
         surrogate = None
     elif model == CIRCUIT_FEATURE_SURROGATE:
-        surrogate: ISurrogate = CircuitFeatureSurrogate(qubit_num, neuron_counts=[512, 512])
+        surrogate: ISurrogate = CircuitFeatureSurrogate(
+            qubit_num, neuron_counts=[512, 512], max_epochs=10_000, dropout=0.0)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
-    elif model == RANDOM_BASE_STATE_SURROGATE:
-        surrogate: ISurrogate = RandomBaseStateSurrogate(target=target)
+    elif model == CALIBRATED_STATE_VECTOR_SURROGATE:
+        surrogate: ISurrogate = CalibratedStateVectorSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
-        surrogate: ISurrogate = ShotDistanceSurrogate(target=target, shots=1000)
+        surrogate: ISurrogate = ShotDistanceSurrogate(
+            target=target, shots=1000)
     elif model == RANDOM_FITNESS_SURROGATE:
         surrogate: ISurrogate = RandomFitnessSurrogate()
     elif model == GNN_SURROGATE:
-        surrogate: ISurrogate = GNNSurrogate(channel_counts=[128, 128])
+        surrogate: ISurrogate = GNNSurrogate(
+            qubit_num,
+            channel_counts=[128, 128], max_epochs=10_000, dropout=0.5)
     else:
         raise NotImplementedError(
             f"No implementation found for surrogate model '{model}'.")
 
-    if surrogate is None:
-        surrogate_params = {}
-    else:
+    surrogate_params = {}
+    if surrogate is not None:
         surrogate_params = surrogate.params
 
     log_experiment_details(
@@ -118,7 +131,12 @@ def run_experiment(model: str, qubit_num: int, gate_count: int, seed: int, tag: 
     ea = EvolutionaryAlgorithm(ea_params, surrogate)
     ea.run()
 
-    log_end_timestamp(logging_prefix=logging_prefix)
+    if surrogate is not None:
+        surrogate_params = surrogate.params
+
+    update_experiment_details(logging_prefix=logging_prefix,
+                              surrogate_params=surrogate_params,
+                              log_end_timestamp=True)
 
 
 if __name__ == "__main__":
