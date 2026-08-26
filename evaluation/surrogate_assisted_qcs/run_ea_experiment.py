@@ -14,7 +14,7 @@ from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
     RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, CALIBRATED_STATE_VECTOR_SURROGATE, \
-    CalibratedStateVectorSurrogate
+    CalibratedStateVectorSurrogate, RandomBaseStateSurrogate, RANDOM_BASE_STATE_SURROGATE
 
 from logging_ import log_experiment_details, update_experiment_details
 
@@ -28,7 +28,7 @@ from logging_ import log_experiment_details, update_experiment_details
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, 'None', '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
           f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}', "
-          f"'{CALIBRATED_STATE_VECTOR_SURROGATE}'."
+          f"'{CALIBRATED_STATE_VECTOR_SURROGATE}', '{RANDOM_BASE_STATE_SURROGATE}'."
           )
 )
 @click.option(
@@ -70,7 +70,7 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     parent_count = 100
     offspring_count = 100
     seed_population_size = 2000
-    max_evaluations = 150_000
+    max_evaluations = 100_000
     logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{seed}s_{str(uuid4())}"
 
     if seed is not None:
@@ -103,6 +103,8 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
     elif model == CALIBRATED_STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = CalibratedStateVectorSurrogate(target=target)
+    elif model == RANDOM_BASE_STATE_SURROGATE:
+        surrogate: ISurrogate = RandomBaseStateSurrogate(target=target)
     elif model == SHOT_DISTANCE_SURROGATE:
         surrogate: ISurrogate = ShotDistanceSurrogate(
             target=target, shots=1000)

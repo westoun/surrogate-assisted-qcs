@@ -17,11 +17,14 @@ if __name__ == "__main__":
     ]
 
     evaluate_every_values = [
-        5, 10, 15
+        # 5, 10, 15
+        10
     ]
 
-    models = ["None", "circuit_feature", "gnn", "state_vector",
-              "calibrated_state_vector", "random_fitness"]
+    models = [
+        "calibrated_state_vector", "random_base_state_vector", "state_vector",
+        "gnn", "circuit_feature", "random_fitness", "None"
+    ]
     seed_num = 15
     seed_offset = 0
 

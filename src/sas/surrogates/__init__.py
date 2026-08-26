@@ -5,3 +5,4 @@ from .shot_distance_surrogate import SHOT_DISTANCE_SURROGATE, ShotDistanceSurrog
 from .random_fitness import RandomFitnessSurrogate, RANDOM_FITNESS_SURROGATE
 from .gnn_surrogate import GNN_SURROGATE, GNNSurrogate
 from .calibrated_state_vector import CALIBRATED_STATE_VECTOR_SURROGATE, CalibratedStateVectorSurrogate
+from .random_base_state_surrogate import RANDOM_BASE_STATE_SURROGATE, RandomBaseStateSurrogate
