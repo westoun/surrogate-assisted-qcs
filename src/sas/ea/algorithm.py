@@ -170,9 +170,9 @@ class EvolutionaryAlgorithm():
 
                 fitness_min = min(min(true_fitness_scores), fitness_min)
 
-                with memory_recorder["train"]:
-                    with time_recorder["train"]:
-                        self.surrogate.train(population)
+                # with memory_recorder["train"]:
+                #     with time_recorder["train"]:
+                #         self.surrogate.train(population)
 
             else:
 
