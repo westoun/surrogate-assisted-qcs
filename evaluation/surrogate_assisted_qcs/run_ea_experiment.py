@@ -14,7 +14,8 @@ from src.sas.surrogates import ISurrogate, CircuitFeatureSurrogate, \
     CIRCUIT_FEATURE_SURROGATE, StateVectorSurrogate, STATE_VECTOR_SURROGATE, \
     ShotDistanceSurrogate, SHOT_DISTANCE_SURROGATE, RandomFitnessSurrogate, \
     RANDOM_FITNESS_SURROGATE, GNNSurrogate, GNN_SURROGATE, CALIBRATED_STATE_VECTOR_SURROGATE, \
-    CalibratedStateVectorSurrogate, RandomBaseStateSurrogate, RANDOM_BASE_STATE_SURROGATE
+    CalibratedStateVectorSurrogate, RandomBaseStateSurrogate, RANDOM_BASE_STATE_SURROGATE, \
+    MultiBaseStateSurrogate, MULTI_BASE_STATE_SURROGATE
 
 from logging_ import log_experiment_details, update_experiment_details
 
@@ -28,7 +29,8 @@ from logging_ import log_experiment_details, update_experiment_details
     help=("The surrogate model to be used. Default is None. "
           f"Allowed: None, 'None', '{CIRCUIT_FEATURE_SURROGATE}', '{STATE_VECTOR_SURROGATE}', "
           f"'{SHOT_DISTANCE_SURROGATE}', '{RANDOM_FITNESS_SURROGATE}', '{GNN_SURROGATE}', "
-          f"'{CALIBRATED_STATE_VECTOR_SURROGATE}', '{RANDOM_BASE_STATE_SURROGATE}'."
+          f"'{CALIBRATED_STATE_VECTOR_SURROGATE}', '{RANDOM_BASE_STATE_SURROGATE}', "
+          f"'{MULTI_BASE_STATE_SURROGATE}'."
           )
 )
 @click.option(
@@ -101,6 +103,8 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
             qubit_num, neuron_counts=[512, 512], max_epochs=10_000, dropout=0.0)
     elif model == STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = StateVectorSurrogate(target=target)
+    elif model == MULTI_BASE_STATE_SURROGATE:
+        surrogate: ISurrogate = MultiBaseStateSurrogate(target=target, n=2)
     elif model == CALIBRATED_STATE_VECTOR_SURROGATE:
         surrogate: ISurrogate = CalibratedStateVectorSurrogate(target=target)
     elif model == RANDOM_BASE_STATE_SURROGATE:
