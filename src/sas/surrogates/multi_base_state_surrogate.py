@@ -2,7 +2,7 @@
 import numpy as np
 from random import shuffle, randint, sample
 from statistics import mean
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from src.sas.types import Circuit, H, S, T, CX
 from .interface import ISurrogate
@@ -48,3 +48,10 @@ class MultiBaseStateSurrogate(ISurrogate):
             fitness_scores.append(mean(distances))
 
         return fitness_scores
+
+    @property
+    def params(self) -> Dict:
+        return {
+            "type": self.type,
+            "n": self.n
+        }
