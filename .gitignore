@@ -2,7 +2,7 @@
 *.DS_Store
 *.csv
 
-tmp/
+/tmp
 *.pkl
 
 # Python-generated files
