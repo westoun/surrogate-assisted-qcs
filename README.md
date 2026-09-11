@@ -81,6 +81,16 @@ execute
 python run_ea_experiment.py --help
 ```
 
+To analyse the data and generate the figures reported in the paper,
+run the corresponding experiments from within the `evaluation/surrogate_assisted_qcs/`
+directory.
+Alternatively, you can download the data reported in the paper from the
+accompagnying online repository and save it to the `results/` directory.
+
+Then, open the `analysis.ipynb` notebook and run all cells in order.
+The figures reported in the paper should automatically be shown and
+saved to the `results/` directory.
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
