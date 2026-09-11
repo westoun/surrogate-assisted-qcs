@@ -85,7 +85,7 @@ To analyse the data and generate the figures reported in the paper,
 run the corresponding experiments from within the `evaluation/surrogate_assisted_qcs/`
 directory.
 Alternatively, you can download the data reported in the paper from the
-accompagnying online repository and save it to the `results/` directory.
+accompagnying [online repository](https://figshare.com/articles/dataset/Experiment_data_for_the_paper_State_Vector-based_Surrogates_for_Unitary_Synthesis_with_Evolutionary_Algorithms_/33610927?file=68451406) and save it to the `results/` directory.
 
 Then, open the `analysis.ipynb` notebook and run all cells in order.
 The figures reported in the paper should automatically be shown and
