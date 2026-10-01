@@ -55,11 +55,18 @@ from logging_ import log_experiment_details, update_experiment_details
     help="The number of gates per circuit. Default is 20.",
 )
 @click.option(
-    "--seed",
-    "-s",
+    "--target_seed",
+    "-ts",
     type=click.INT,
     default=0,
-    help="The seed value used for pythons random module.",
+    help="The seed value used for the target unitary generation. Should be different from the search_seed value.",
+)
+@click.option(
+    "--search_seed",
+    "-ss",
+    type=click.INT,
+    default=0,
+    help="The seed value used for the search algorithm. Should be different from the target_seed value.",
 )
 @click.option(
     "--tag",
@@ -68,21 +75,24 @@ from logging_ import log_experiment_details, update_experiment_details
     default=None,
     help="An optional tag that is logged alongside the experiment config for later identification.",
 )
-def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, seed: int, tag: str):
+def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: int, target_seed: int, search_seed: int, tag: str):
     parent_count = 100
     offspring_count = 100
-    seed_population_size = 2000
+    seed_population_size = 5000
     max_evaluations = 100_000
-    logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{seed}s_{str(uuid4())}"
+    logging_prefix = f"results/{qubit_num}qn{gate_count}gc{evaluate_every}ee_{model}_{target_seed}ts{search_seed}ss_{str(uuid4())}"
 
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+    if target_seed is not None:
+        random.seed(target_seed)
 
     # Create synthesis target using simulator
     target_circuit = random_circuit(qubit_num, gate_count)
     target = simulate_unitary(target_circuit)
+
+    if search_seed is not None:
+        random.seed(search_seed)
+        np.random.seed(search_seed)
+        torch.manual_seed(search_seed)
 
     ea_params = EAParams(
         target=target,
@@ -129,7 +139,8 @@ def run_experiment(model: str, evaluate_every: int, qubit_num: int, gate_count: 
     log_experiment_details(
         ea_params=ea_params,
         surrogate_params=surrogate_params,
-        seed=seed,
+        target_seed=target_seed,
+        search_seed=search_seed,
         tag=tag,
         logging_prefix=logging_prefix
     )

@@ -8,7 +8,8 @@ from src.sas.utils.time import get_timestamp
 
 def log_experiment_details(
     ea_params: EAParams,
-    seed: int,
+    target_seed: int,
+    search_seed: int,
     tag: str,
     logging_prefix: str,
     surrogate_params: Dict = None
@@ -30,7 +31,8 @@ def log_experiment_details(
                 "seed_population_size": ea_params.seed_population_size
             },
             "surrogate": surrogate_params,
-            "seed": seed,
+            "target_seed": target_seed,
+            "search_seed": search_seed,
             "tag": tag,
             "logging_prefix": logging_prefix
         }
