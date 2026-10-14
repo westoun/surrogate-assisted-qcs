@@ -87,6 +87,7 @@ class EvolutionaryAlgorithm():
 
         cum_explicit_evaluations = len(population)
 
+        use_surrogate = False 
         for generation in range(1, 20_000):  # High number for max generations
 
             explicit_evaluations = 0
@@ -94,7 +95,8 @@ class EvolutionaryAlgorithm():
             with memory_recorder["ea"]:
                 with time_recorder["ea"]:
 
-                    if self.surrogate is None or (generation - 1) % self.params.evaluate_every == 0:
+                    # If no surrogate is used at all or explicit evaluation was used in the last generation.
+                    if self.surrogate is None or not use_surrogate:
                         parents = self.select(
                             population, count=self.params.parent_count, use_surrogate=False)
                     else:
@@ -113,6 +115,19 @@ class EvolutionaryAlgorithm():
             fitness_mse_new_circuits, rank_correlation_new_circuits = None, None
             fitness_mse, rank_correlation, selection_overlap = None, None, None
 
+            # if evaluate_every is positive, then only use explicit evaluation
+            # at the specified interval.
+            if self.params.evaluate_every > 1:
+                use_surrogate = generation % self.params.evaluate_every != 0
+            
+            # if evaluate_every is negative, then use the surrogate for one 
+            # generation and afterwards only explicit evaluation.
+            elif self.params.evaluate_every < -1:
+                use_surrogate = generation % abs(self.params.evaluate_every) == 1
+
+            else:
+                raise ValueError(f"No strategy implemented for how to handle evaluation frequency of '{self.params.evaluate_every}'")
+
             if self.surrogate is None:
 
                 explicit_evaluations = len(offspring)
@@ -126,7 +141,7 @@ class EvolutionaryAlgorithm():
                     circuit.true_fitness for circuit in population
                 ]), fitness_min)
 
-            elif generation % self.params.evaluate_every == 0:
+            elif not use_surrogate:
 
                 circuits_to_evaluate = [
                     circuit for circuit in population if circuit.true_fitness is None
